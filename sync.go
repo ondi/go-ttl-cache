@@ -7,6 +7,8 @@ package cache
 import "sync"
 import "time"
 
+import "github.com/ondi/go-cache"
+
 type SyncCache_t struct {
 	mx sync.Mutex
 	Cache_t
@@ -24,16 +26,16 @@ func (self * SyncCache_t) Flush(ts time.Time, evicted Evict) {
 	self.mx.Unlock()
 }
 
-func (self * SyncCache_t) Create(ts time.Time, key interface{}, value interface{}, evicted Evict) (res interface{}, ok bool) {
+func (self * SyncCache_t) Create(ts time.Time, key interface{}, value interface{}, evicted Evict) (it * cache.Value_t, ok bool) {
 	self.mx.Lock()
-	res, ok = self.Cache_t.Create(ts, key, value, evicted)
+	it, ok = self.Cache_t.Create(ts, key, value, evicted)
 	self.mx.Unlock()
 	return
 }
 
-func (self * SyncCache_t) Push(ts time.Time, key interface{}, value interface{}, evicted Evict) (res interface{}, ok bool) {
+func (self * SyncCache_t) Push(ts time.Time, key interface{}, value interface{}, evicted Evict) (it * cache.Value_t, ok bool) {
 	self.mx.Lock()
-	res, ok = self.Cache_t.Push(ts, key, value, evicted)
+	it, ok = self.Cache_t.Push(ts, key, value, evicted)
 	self.mx.Unlock()
 	return
 }
