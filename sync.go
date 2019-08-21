@@ -33,7 +33,7 @@ func (self * SyncCache_t) Create(ts time.Time, key interface{}, value interface{
 
 func (self * SyncCache_t) Push(ts time.Time, key interface{}, value interface{}, evicted Evict) (ok bool) {
 	self.mx.Lock()
-	ok = self.Cache_t.Update(ts, key, value, evicted)
+	ok = self.Cache_t.Push(ts, key, value, evicted)
 	self.mx.Unlock()
 	return
 }
