@@ -11,7 +11,7 @@ import "testing"
 func ExampleTtlCache1() {
 	var ok bool
 	var e Evict_t
-	c := New(2, time.Second)
+	c := NewSync(2, time.Second)
 	
 	c.Update(time.Now(), 1, 1, &e)
 	c.Update(time.Now(), 2, 2, &e)

@@ -4,13 +4,11 @@
 
 package cache
 
-import "sync"
 import "time"
 
 import "github.com/ondi/go-cache"
 
 type Cache_t struct {
-	mx sync.Mutex
 	c * cache.Cache_t
 	limit int
 	ttl time.Duration
@@ -57,7 +55,7 @@ func New(limit int, ttl time.Duration) (self * Cache_t) {
 	return
 }
 
-func (self * Cache_t) __evict(it * cache.Value_t, ts time.Time, keep int, evicted Evict) bool {
+func (self * Cache_t) evict(it * cache.Value_t, ts time.Time, keep int, evicted Evict) bool {
 	if self.c.Size() > keep || ts.Sub(it.Value().(Mapped_t).Ts) > self.ttl {
 		self.c.Remove(it.Key())
 		evicted.Evict(Value_t{Key: it.Key(), Value: it.Value().(Mapped_t).Value})
@@ -66,31 +64,21 @@ func (self * Cache_t) __evict(it * cache.Value_t, ts time.Time, keep int, evicte
 	return false
 }
 
-func (self * Cache_t) __flush(ts time.Time, keep int, evicted Evict) {
-	for it := self.c.Back(); it != self.c.End() && self.__evict(it, ts, keep, evicted); it = it.Prev() {}
-}
-
 func (self * Cache_t) Flush(ts time.Time, evicted Evict) {
-	self.mx.Lock()
-	defer self.mx.Unlock()
-	self.__flush(ts, self.limit, evicted)
+	for it := self.c.Back(); it != self.c.End() && self.evict(it, ts, self.limit, evicted); it = it.Prev() {}
 }
 
 func (self * Cache_t) Create(ts time.Time, key interface{}, value interface{}, evicted Evict) (ok bool) {
-	self.mx.Lock()
-	defer self.mx.Unlock()
 	if _, ok = self.c.CreateFront(key, Mapped_t{Value: value, Ts: ts}); ok {
-		self.__flush(ts, self.limit, evicted)
+		self.Flush(ts, evicted)
 	}
 	return
 }
 
 func (self * Cache_t) Update(ts time.Time, key interface{}, value interface{}, evicted Evict) (ok bool) {
-	self.mx.Lock()
-	defer self.mx.Unlock()
 	var it * cache.Value_t
 	if it, ok = self.c.PushFront(key, Mapped_t{Value: value, Ts: ts}); ok {
-		self.__flush(ts, self.limit, evicted)
+		self.Flush(ts, evicted)
 	} else {
 		it.Update(Mapped_t{Value: value, Ts: ts})
 	}
@@ -98,9 +86,7 @@ func (self * Cache_t) Update(ts time.Time, key interface{}, value interface{}, e
 }
 
 func (self * Cache_t) Get(ts time.Time, key interface{}, evicted Evict) (interface{}, bool) {
-	self.mx.Lock()
-	defer self.mx.Unlock()
-	self.__flush(ts, self.limit, evicted)
+	self.Flush(ts, evicted)
 	if it := self.c.FindFront(key); it != self.c.End() {
 		it.Update(Mapped_t{Value: it.Value().(Mapped_t).Value, Ts: ts})
 		return it.Value().(Mapped_t).Value, true
@@ -109,9 +95,7 @@ func (self * Cache_t) Get(ts time.Time, key interface{}, evicted Evict) (interfa
 }
 
 func (self * Cache_t) Find(ts time.Time, key interface{}, evicted Evict) (interface{}, bool) {
-	self.mx.Lock()
-	defer self.mx.Unlock()
-	self.__flush(ts, self.limit, evicted)
+	self.Flush(ts, evicted)
 	if it := self.c.Find(key); it != self.c.End() {
 		return it.Value().(Mapped_t).Value, true
 	}
@@ -119,14 +103,10 @@ func (self * Cache_t) Find(ts time.Time, key interface{}, evicted Evict) (interf
 }
 
 func (self * Cache_t) Remove(key interface{}) {
-	self.mx.Lock()
-	defer self.mx.Unlock()
 	self.c.Remove(key)
 }
 
 func (self * Cache_t) LeastTs() (time.Time, bool) {
-	self.mx.Lock()
-	defer self.mx.Unlock()
 	if self.c.Size() > 0 {
 		return self.c.Back().Value().(Mapped_t).Ts, true
 	}
@@ -134,8 +114,6 @@ func (self * Cache_t) LeastTs() (time.Time, bool) {
 }
 
 func (self * Cache_t) Range(f func(key interface{}, value interface{}) bool) {
-	self.mx.Lock()
-	defer self.mx.Unlock()
 	for it := self.c.Front(); it != self.c.End(); it = it.Next() {
 		if f(it.Key(), it.Value().(Mapped_t).Value) == false {
 			return
@@ -144,15 +122,12 @@ func (self * Cache_t) Range(f func(key interface{}, value interface{}) bool) {
 }
 
 func (self * Cache_t) Size() int {
-	self.mx.Lock()
-	defer self.mx.Unlock()
 	return self.c.Size()
 }
 
 func (self * Cache_t) Limit() int {
 	return self.limit
 }
-
 
 func (self * Cache_t) TTL() time.Duration {
 	return self.ttl
