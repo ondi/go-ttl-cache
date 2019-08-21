@@ -14,6 +14,7 @@ func ExampleTtlCache1() {
 	c := NewSync(2, time.Second)
 	
 	c.Push(time.Now(), 1, 1, &e)
+	c.Get(time.Now(), 1, &e)
 	c.Push(time.Now(), 2, 2, &e)
 	c.Get(time.Now(), 1, &e)
 	c.Push(time.Now(), 3, 3, &e)
