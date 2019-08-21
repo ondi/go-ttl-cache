@@ -45,9 +45,9 @@ func (self * SyncCache_t) Get(ts time.Time, key interface{}, evicted Evict) (res
 	return
 }
 
-func (self * SyncCache_t) Find(ts time.Time, key interface{}, evicted Evict) (res interface{}, ok bool) {
+func (self * SyncCache_t) Find(key interface{}) (res interface{}, ok bool) {
 	self.mx.Lock()
-	res, ok = self.Cache_t.Find(ts, key, evicted)
+	res, ok = self.Cache_t.Find(key)
 	self.mx.Unlock()
 	return
 }

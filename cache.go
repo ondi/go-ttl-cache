@@ -94,8 +94,7 @@ func (self * Cache_t) Get(ts time.Time, key interface{}, evicted Evict) (interfa
 	return nil, false
 }
 
-func (self * Cache_t) Find(ts time.Time, key interface{}, evicted Evict) (interface{}, bool) {
-	self.Flush(ts, evicted)
+func (self * Cache_t) Find(key interface{}) (interface{}, bool) {
 	if it := self.c.Find(key); it != self.c.End() {
 		return it.Value().(Mapped_t).Value, true
 	}
