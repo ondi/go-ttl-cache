@@ -68,15 +68,14 @@ func (self * Cache_t) Flush(ts time.Time, evicted Evict) {
 	for it := self.c.Back(); it != self.c.End() && self.evict(it, ts, self.limit, evicted); it = it.Prev() {}
 }
 
-func (self * Cache_t) Create(ts time.Time, key interface{}, value interface{}, evicted Evict) (ok bool) {
-	if _, ok = self.c.CreateFront(key, Mapped_t{Value: value, Ts: ts}); ok {
+func (self * Cache_t) Create(ts time.Time, key interface{}, value interface{}, evicted Evict) (it * cache.Value_t, ok bool) {
+	if it, ok = self.c.CreateFront(key, Mapped_t{Value: value, Ts: ts}); ok {
 		self.Flush(ts, evicted)
 	}
 	return
 }
 
-func (self * Cache_t) Push(ts time.Time, key interface{}, value interface{}, evicted Evict) (ok bool) {
-	var it * cache.Value_t
+func (self * Cache_t) Push(ts time.Time, key interface{}, value interface{}, evicted Evict) (it * cache.Value_t, ok bool) {
 	if it, ok = self.c.PushFront(key, Mapped_t{Value: value, Ts: ts}); ok {
 		self.Flush(ts, evicted)
 	} else {

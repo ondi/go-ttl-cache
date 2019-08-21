@@ -13,10 +13,10 @@ func ExampleTtlCache1() {
 	var e Evict_t
 	c := NewSync(2, time.Second)
 	
-	c.Update(time.Now(), 1, 1, &e)
-	c.Update(time.Now(), 2, 2, &e)
+	c.Push(time.Now(), 1, 1, &e)
+	c.Push(time.Now(), 2, 2, &e)
 	c.Get(time.Now(), 1, &e)
-	c.Update(time.Now(), 3, 3, &e)
+	c.Push(time.Now(), 3, 3, &e)
 	_, ok = c.Get(time.Now(), 1, &e)
 	fmt.Printf("%v\n", ok)
 	_, ok = c.Get(time.Now(), 2, &e)
