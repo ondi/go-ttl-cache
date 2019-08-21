@@ -68,40 +68,38 @@ func (self * Cache_t) Flush(ts time.Time, evicted Evict) {
 	for it := self.c.Back(); it != self.c.End() && self.evict(it, ts, self.limit, evicted); it = it.Prev() {}
 }
 
-func (self * Cache_t) Create(ts time.Time, key interface{}, value interface{}, evicted Evict) (res * Mapped_t, ok bool) {
-	var it * cache.Value_t
-	if it, ok = self.c.CreateFront(key, nil); ok {
-		res = &Mapped_t{Value: value, ts: ts}
-		it.Update(res)
+func (self * Cache_t) Create(ts time.Time, key interface{}, value interface{}, evicted Evict) (interface{}, bool) {
+	it, ok := self.c.CreateFront(key, nil)
+	if ok {
+		it.Update(&Mapped_t{Value: value, ts: ts})
 		self.Flush(ts, evicted)
 	}
-	return
+	return it.Value().(* Mapped_t).Value, ok
 }
 
-func (self * Cache_t) Push(ts time.Time, key interface{}, value interface{}, evicted Evict) (res * Mapped_t, ok bool) {
-	var it * cache.Value_t
-	res = &Mapped_t{Value: value, ts: ts}
-	if it, ok = self.c.PushFront(key, res); ok {
+func (self * Cache_t) Push(ts time.Time, key interface{}, value interface{}, evicted Evict) (interface{}, bool) {
+	res := &Mapped_t{Value: value, ts: ts}
+	it, ok := self.c.PushFront(key, res)
+	if ok {
 		self.Flush(ts, evicted)
 	} else {
 		it.Update(res)
 	}
-	return
+	return res.Value, ok
 }
 
-func (self * Cache_t) Get(ts time.Time, key interface{}, evicted Evict) (res * Mapped_t, ok bool) {
+func (self * Cache_t) Get(ts time.Time, key interface{}, evicted Evict) (interface{}, bool) {
 	self.Flush(ts, evicted)
 	if it := self.c.FindFront(key); it != self.c.End() {
-		res = it.Value().(* Mapped_t)
-		res.ts = ts
-		return res, true
+		it.Value().(* Mapped_t).ts = ts
+		return it.Value().(* Mapped_t).Value, true
 	}
-	return
+	return nil, false
 }
 
-func (self * Cache_t) Find(key interface{}) (* Mapped_t, bool) {
+func (self * Cache_t) Find(key interface{}) (interface{}, bool) {
 	if it := self.c.Find(key); it != self.c.End() {
-		return it.Value().(* Mapped_t), true
+		return it.Value().(* Mapped_t).Value, true
 	}
 	return nil, false
 }
