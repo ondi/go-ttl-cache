@@ -75,7 +75,7 @@ func (self * Cache_t) Create(ts time.Time, key interface{}, value interface{}, e
 	return
 }
 
-func (self * Cache_t) Update(ts time.Time, key interface{}, value interface{}, evicted Evict) (ok bool) {
+func (self * Cache_t) Push(ts time.Time, key interface{}, value interface{}, evicted Evict) (ok bool) {
 	var it * cache.Value_t
 	if it, ok = self.c.PushFront(key, Mapped_t{Value: value, Ts: ts}); ok {
 		self.Flush(ts, evicted)
