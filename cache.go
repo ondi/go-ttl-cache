@@ -56,9 +56,9 @@ func New(limit int, ttl time.Duration) (self * Cache_t) {
 }
 
 func (self * Cache_t) evict(it * cache.Value_t, ts time.Time, keep int, evicted Evict) bool {
-	if self.c.Size() > keep || ts.Sub(it.Value().(* Mapped_t).ts) > self.ttl {
+	if self.c.Size() > keep || ts.Sub(it.Value().(Mapped_t).ts) > self.ttl {
 		self.c.Remove(it.Key())
-		evicted.Evict(Value_t{Key: it.Key(), Value: it.Value().(* Mapped_t).Value})
+		evicted.Evict(Value_t{Key: it.Key(), Value: it.Value().(Mapped_t).Value})
 		return true
 	}
 	return false
@@ -71,14 +71,14 @@ func (self * Cache_t) Flush(ts time.Time, evicted Evict) {
 func (self * Cache_t) Create(ts time.Time, key interface{}, value interface{}, evicted Evict) (interface{}, bool) {
 	it, ok := self.c.CreateFront(key, nil)
 	if ok {
-		it.Update(&Mapped_t{Value: value, ts: ts})
+		it.Update(Mapped_t{Value: value, ts: ts})
 		self.Flush(ts, evicted)
 	}
-	return it.Value().(* Mapped_t).Value, ok
+	return it.Value().(Mapped_t).Value, ok
 }
 
 func (self * Cache_t) Push(ts time.Time, key interface{}, value interface{}, evicted Evict) (interface{}, bool) {
-	res := &Mapped_t{Value: value, ts: ts}
+	res := Mapped_t{Value: value, ts: ts}
 	it, ok := self.c.PushFront(key, res)
 	if ok {
 		self.Flush(ts, evicted)
@@ -91,15 +91,15 @@ func (self * Cache_t) Push(ts time.Time, key interface{}, value interface{}, evi
 func (self * Cache_t) Get(ts time.Time, key interface{}, evicted Evict) (interface{}, bool) {
 	self.Flush(ts, evicted)
 	if it := self.c.FindFront(key); it != self.c.End() {
-		it.Value().(* Mapped_t).ts = ts
-		return it.Value().(* Mapped_t).Value, true
+		it.Update(Mapped_t{Value: it.Value().(Mapped_t).Value, ts: ts})
+		return it.Value().(Mapped_t).Value, true
 	}
 	return nil, false
 }
 
 func (self * Cache_t) Find(key interface{}) (interface{}, bool) {
 	if it := self.c.Find(key); it != self.c.End() {
-		return it.Value().(* Mapped_t).Value, true
+		return it.Value().(Mapped_t).Value, true
 	}
 	return nil, false
 }
@@ -117,7 +117,7 @@ func (self * Cache_t) LeastTs() (time.Time, bool) {
 
 func (self * Cache_t) Range(f func(key interface{}, value interface{}) bool) {
 	for it := self.c.Front(); it != self.c.End(); it = it.Next() {
-		if f(it.Key(), it.Value().(* Mapped_t).Value) == false {
+		if f(it.Key(), it.Value().(Mapped_t).Value) == false {
 			return
 		}
 	}
