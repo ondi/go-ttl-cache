@@ -110,7 +110,7 @@ func (self * Cache_t) Remove(key interface{}) {
 
 func (self * Cache_t) LeastTs() (time.Time, bool) {
 	if self.c.Size() > 0 {
-		return self.c.Back().Value().(* Mapped_t).ts, true
+		return self.c.Back().Value().(Mapped_t).ts, true
 	}
 	return time.Time{}, false
 }
