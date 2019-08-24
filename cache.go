@@ -70,10 +70,10 @@ func (self * Cache_t) Flush(ts time.Time) {
 	for it := self.c.Back(); it != self.c.End() && self.flush(it, ts, self.limit); it = it.Prev() {}
 }
 
-func (self * Cache_t) Create(ts time.Time, key interface{}, value interface{}) (interface{}, bool) {
+func (self * Cache_t) Create(ts time.Time, key interface{}, value func() interface{}) (interface{}, bool) {
 	it, ok := self.c.CreateFront(key, nil)
 	if ok {
-		it.Update(Mapped_t{Value: value, ts: ts})
+		it.Update(Mapped_t{Value: value(), ts: ts})
 		self.Flush(ts)
 	}
 	return it.Value().(Mapped_t).Value, ok
