@@ -8,12 +8,6 @@ import "time"
 
 import "github.com/ondi/go-cache"
 
-type Cache_t struct {
-	c * cache.Cache_t
-	limit int
-	ttl time.Duration
-}
-
 type Mapped_t struct {
 	Value interface{}
 	ts time.Time
@@ -25,23 +19,30 @@ type Value_t struct {
 }
 
 type Evict interface {
-	Evict(Value_t) bool
+	PushBackNoWait(Value_t) bool
+}
+
+type Cache_t struct {
+	c * cache.Cache_t
+	limit int
+	ttl time.Duration
+	evict Evict
 }
 
 type Evict_t []Value_t
 
-func (self * Evict_t) Evict(value Value_t) bool {
+func (self * Evict_t) PushBackNoWait(value Value_t) bool {
 	*self = append(*self, value)
 	return true
 }
 
 type Drop_t struct {}
 
-func (Drop_t) Evict(Value_t) bool {
+func (Drop_t) PushBackNoWait(Value_t) bool {
 	return true
 }
 
-func New(limit int, ttl time.Duration) (self * Cache_t) {
+func New(limit int, ttl time.Duration, evict Evict) (self * Cache_t) {
 	self = &Cache_t{}
 	self.c = cache.New()
 	if ttl <= 0 {
@@ -52,44 +53,45 @@ func New(limit int, ttl time.Duration) (self * Cache_t) {
 	}
 	self.ttl = ttl
 	self.limit = limit
+	self.evict = evict
 	return
 }
 
-func (self * Cache_t) evict(it * cache.Value_t, ts time.Time, keep int, evicted Evict) bool {
+func (self * Cache_t) flush(it * cache.Value_t, ts time.Time, keep int) bool {
 	if self.c.Size() > keep || ts.Sub(it.Value().(Mapped_t).ts) > self.ttl {
 		self.c.Remove(it.Key())
-		evicted.Evict(Value_t{Key: it.Key(), Value: it.Value().(Mapped_t).Value})
+		self.evict.PushBackNoWait(Value_t{Key: it.Key(), Value: it.Value().(Mapped_t).Value})
 		return true
 	}
 	return false
 }
 
-func (self * Cache_t) Flush(ts time.Time, evicted Evict) {
-	for it := self.c.Back(); it != self.c.End() && self.evict(it, ts, self.limit, evicted); it = it.Prev() {}
+func (self * Cache_t) Flush(ts time.Time) {
+	for it := self.c.Back(); it != self.c.End() && self.flush(it, ts, self.limit); it = it.Prev() {}
 }
 
-func (self * Cache_t) Create(ts time.Time, key interface{}, value interface{}, evicted Evict) (interface{}, bool) {
+func (self * Cache_t) Create(ts time.Time, key interface{}, value interface{}) (interface{}, bool) {
 	it, ok := self.c.CreateFront(key, nil)
 	if ok {
 		it.Update(Mapped_t{Value: value, ts: ts})
-		self.Flush(ts, evicted)
+		self.Flush(ts)
 	}
 	return it.Value().(Mapped_t).Value, ok
 }
 
-func (self * Cache_t) Push(ts time.Time, key interface{}, value interface{}, evicted Evict) (interface{}, bool) {
+func (self * Cache_t) Push(ts time.Time, key interface{}, value interface{}) (interface{}, bool) {
 	res := Mapped_t{Value: value, ts: ts}
 	it, ok := self.c.PushFront(key, res)
 	if ok {
-		self.Flush(ts, evicted)
+		self.Flush(ts)
 	} else {
 		it.Update(res)
 	}
 	return res.Value, ok
 }
 
-func (self * Cache_t) Get(ts time.Time, key interface{}, evicted Evict) (interface{}, bool) {
-	self.Flush(ts, evicted)
+func (self * Cache_t) Get(ts time.Time, key interface{}) (interface{}, bool) {
+	self.Flush(ts)
 	if it := self.c.FindFront(key); it != self.c.End() {
 		it.Update(Mapped_t{Value: it.Value().(Mapped_t).Value, ts: ts})
 		return it.Value().(Mapped_t).Value, true

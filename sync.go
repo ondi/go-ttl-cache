@@ -12,35 +12,35 @@ type SyncCache_t struct {
 	Cache_t
 }
 
-func NewSync(limit int, ttl time.Duration) (self * SyncCache_t) {
+func NewSync(limit int, ttl time.Duration, evict Evict) (self * SyncCache_t) {
 	self = &SyncCache_t{}
-	self.Cache_t = *New(limit, ttl)
+	self.Cache_t = *New(limit, ttl, evict)
 	return
 }
 
-func (self * SyncCache_t) Flush(ts time.Time, evicted Evict) {
+func (self * SyncCache_t) Flush(ts time.Time) {
 	self.mx.Lock()
-	self.Cache_t.Flush(ts, evicted)
+	self.Cache_t.Flush(ts)
 	self.mx.Unlock()
 }
 
-func (self * SyncCache_t) Create(ts time.Time, key interface{}, value interface{}, evicted Evict) (res interface{}, ok bool) {
+func (self * SyncCache_t) Create(ts time.Time, key interface{}, value interface{}) (res interface{}, ok bool) {
 	self.mx.Lock()
-	res, ok = self.Cache_t.Create(ts, key, value, evicted)
-	self.mx.Unlock()
-	return
-}
-
-func (self * SyncCache_t) Push(ts time.Time, key interface{}, value interface{}, evicted Evict) (res interface{}, ok bool) {
-	self.mx.Lock()
-	res, ok = self.Cache_t.Push(ts, key, value, evicted)
+	res, ok = self.Cache_t.Create(ts, key, value)
 	self.mx.Unlock()
 	return
 }
 
-func (self * SyncCache_t) Get(ts time.Time, key interface{}, evicted Evict) (res interface{}, ok bool) {
+func (self * SyncCache_t) Push(ts time.Time, key interface{}, value interface{}) (res interface{}, ok bool) {
 	self.mx.Lock()
-	res, ok = self.Cache_t.Get(ts, key, evicted)
+	res, ok = self.Cache_t.Push(ts, key, value)
+	self.mx.Unlock()
+	return
+}
+
+func (self * SyncCache_t) Get(ts time.Time, key interface{}) (res interface{}, ok bool) {
+	self.mx.Lock()
+	res, ok = self.Cache_t.Get(ts, key)
 	self.mx.Unlock()
 	return
 }
