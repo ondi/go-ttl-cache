@@ -8,10 +8,12 @@ import "fmt"
 import "time"
 import "testing"
 
+import "github.com/ondi/go-queue"
+
 func ExampleTtlCache1() {
 	var ok bool
-	var e Evict_t
-	c := NewSync(2, time.Second, &e)
+	q := queue.New(1000)
+	c := NewSync(2, time.Second, q)
 	
 	c.Push(time.Now(), 1, 1)
 	c.Get(time.Now(), 1)

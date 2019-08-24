@@ -19,7 +19,7 @@ type Value_t struct {
 }
 
 type Evict interface {
-	PushBackNoWait(Value_t) bool
+	PushBackNoWait(interface{}) bool
 }
 
 type Cache_t struct {
@@ -31,14 +31,14 @@ type Cache_t struct {
 
 type Evict_t []Value_t
 
-func (self * Evict_t) PushBackNoWait(value Value_t) bool {
-	*self = append(*self, value)
+func (self * Evict_t) PushBackNoWait(value interface{}) bool {
+	*self = append(*self, value.(Value_t))
 	return true
 }
 
 type Drop_t struct {}
 
-func (Drop_t) PushBackNoWait(Value_t) bool {
+func (Drop_t) PushBackNoWait(interface{}) bool {
 	return true
 }
 
