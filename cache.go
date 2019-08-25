@@ -79,15 +79,22 @@ func (self * Cache_t) Create(ts time.Time, key interface{}, value func() interfa
 	return it.Value().(Mapped_t).Value, ok
 }
 
-func (self * Cache_t) Push(ts time.Time, key interface{}, value interface{}) (interface{}, bool) {
-	res := Mapped_t{Value: value, ts: ts}
-	it, ok := self.c.PushFront(key, res)
+func (self * Cache_t) Push(ts time.Time, key interface{}, value func() interface{}) (interface{}, bool) {
+	it, ok := self.c.PushFront(key, nil)
+	if ok {
+		it.Update(Mapped_t{Value: value(), ts: ts})
+		self.Flush(ts)
+	}
+	return it.Value().(Mapped_t).Value, ok
+}
+
+func (self * Cache_t) Update(ts time.Time, key interface{}, value interface{}) (interface{}, bool) {
+	it, ok := self.c.PushFront(key, nil)
+	it.Update(Mapped_t{Value: value, ts: ts})
 	if ok {
 		self.Flush(ts)
-	} else {
-		it.Update(res)
 	}
-	return res.Value, ok
+	return it.Value().(Mapped_t).Value, ok
 }
 
 func (self * Cache_t) Get(ts time.Time, key interface{}) (interface{}, bool) {

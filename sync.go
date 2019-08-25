@@ -31,9 +31,16 @@ func (self * SyncCache_t) Create(ts time.Time, key interface{}, value func() int
 	return
 }
 
-func (self * SyncCache_t) Push(ts time.Time, key interface{}, value interface{}) (res interface{}, ok bool) {
+func (self * SyncCache_t) Push(ts time.Time, key interface{}, value func () interface{}) (res interface{}, ok bool) {
 	self.mx.Lock()
 	res, ok = self.Cache_t.Push(ts, key, value)
+	self.mx.Unlock()
+	return
+}
+
+func (self * SyncCache_t) Update(ts time.Time, key interface{}, value interface{}) (res interface{}, ok bool) {
+	self.mx.Lock()
+	res, ok = self.Cache_t.Update(ts, key, value)
 	self.mx.Unlock()
 	return
 }
