@@ -70,6 +70,10 @@ func (self * Cache_t) Flush(ts time.Time) {
 	for it := self.c.Back(); it != self.c.End() && self.flush(it, ts, self.limit); it = it.Prev() {}
 }
 
+func (self * Cache_t) Remove(key interface{}) {
+	self.c.Remove(key)
+}
+
 func (self * Cache_t) Create(ts time.Time, key interface{}, value func() interface{}) (interface{}, bool) {
 	self.Flush(ts)
 	it, ok := self.c.CreateFront(key, func() interface{} {return Mapped_t{Value: value(), ts: ts}})
@@ -97,25 +101,24 @@ func (self * Cache_t) Get(ts time.Time, key interface{}) (interface{}, bool) {
 	return nil, false
 }
 
-func (self * Cache_t) Find(key interface{}) (interface{}, bool) {
+func (self * Cache_t) Find(ts time.Time, key interface{}) (interface{}, bool) {
+	self.Flush(ts)
 	if it := self.c.Find(key); it != self.c.End() {
 		return it.Value().(Mapped_t).Value, true
 	}
 	return nil, false
 }
 
-func (self * Cache_t) Remove(key interface{}) {
-	self.c.Remove(key)
-}
-
-func (self * Cache_t) LeastTs() (time.Time, bool) {
+func (self * Cache_t) LeastTs(ts time.Time) (time.Time, bool) {
+	self.Flush(ts)
 	if self.c.Size() > 0 {
 		return self.c.Back().Value().(Mapped_t).ts, true
 	}
 	return time.Time{}, false
 }
 
-func (self * Cache_t) Range(f func(key interface{}, value interface{}) bool) {
+func (self * Cache_t) Range(ts time.Time, f func(key interface{}, value interface{}) bool) {
+	self.Flush(ts)
 	for it := self.c.Front(); it != self.c.End(); it = it.Next() {
 		if f(it.Key(), it.Value().(Mapped_t).Value) == false {
 			return
