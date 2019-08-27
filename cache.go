@@ -71,26 +71,20 @@ func (self * Cache_t) Flush(ts time.Time) {
 }
 
 func (self * Cache_t) Create(ts time.Time, key interface{}, value func() interface{}) (interface{}, bool) {
+	self.Flush(ts)
 	it, ok := self.c.CreateFront(key, func() interface{} {return Mapped_t{Value: value(), ts: ts}})
-	if ok {
-		self.Flush(ts)
-	}
 	return it.Value().(Mapped_t).Value, ok
 }
 
 func (self * Cache_t) Push(ts time.Time, key interface{}, value func() interface{}) (interface{}, bool) {
+	self.Flush(ts)
 	it, ok := self.c.PushFront(key, func() interface{} {return Mapped_t{Value: value(), ts: ts}})
-	if ok {
-		self.Flush(ts)
-	}
 	return it.Value().(Mapped_t).Value, ok
 }
 
 func (self * Cache_t) Update(ts time.Time, key interface{}, value interface{}) (interface{}, bool) {
+	self.Flush(ts)
 	it, ok := self.c.UpdateFront(key, Mapped_t{Value: value, ts: ts})
-	if ok {
-		self.Flush(ts)
-	}
 	return it.Value().(Mapped_t).Value, ok
 }
 
