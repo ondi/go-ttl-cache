@@ -70,22 +70,28 @@ func (self * Cache_t) Flush(ts time.Time) {
 	for it := self.c.Back(); it != self.c.End() && self.flush(ts, it, self.limit); it = it.Prev() {}
 }
 
-func (self * Cache_t) Create(ts time.Time, key interface{}, value func() interface{}) (interface{}, bool) {
+func (self * Cache_t) Create(ts time.Time, key interface{}, value func() interface{}) (res interface{}, ok bool) {
+	var it * cache.Value_t
+	it, ok = self.c.CreateFront(key, func() interface{} {return Mapped_t{Value: value(), ts: ts}})
+	res = it.Value().(Mapped_t).Value
 	self.Flush(ts)
-	it, ok := self.c.CreateFront(key, func() interface{} {return Mapped_t{Value: value(), ts: ts}})
-	return it.Value().(Mapped_t).Value, ok
+	return
 }
 
-func (self * Cache_t) Push(ts time.Time, key interface{}, value func() interface{}) (interface{}, bool) {
+func (self * Cache_t) Push(ts time.Time, key interface{}, value func() interface{}) (res interface{}, ok bool) {
+	var it * cache.Value_t
+	it, ok = self.c.PushFront(key, func() interface{} {return Mapped_t{Value: value(), ts: ts}})
+	res = it.Value().(Mapped_t).Value
 	self.Flush(ts)
-	it, ok := self.c.PushFront(key, func() interface{} {return Mapped_t{Value: value(), ts: ts}})
-	return it.Value().(Mapped_t).Value, ok
+	return
 }
 
-func (self * Cache_t) Update(ts time.Time, key interface{}, value func() interface{}) (interface{}, bool) {
+func (self * Cache_t) Update(ts time.Time, key interface{}, value func() interface{}) (res interface{}, ok bool) {
+	var it * cache.Value_t
+	it, ok = self.c.UpdateFront(key, func() interface{} {return Mapped_t{Value: value(), ts: ts}})
+	res = it.Value().(Mapped_t).Value
 	self.Flush(ts)
-	it, ok := self.c.UpdateFront(key, func() interface{} {return Mapped_t{Value: value(), ts: ts}})
-	return it.Value().(Mapped_t).Value, ok
+	return
 }
 
 func (self * Cache_t) Get(ts time.Time, key interface{}) (interface{}, bool) {
@@ -122,8 +128,8 @@ func (self * Cache_t) Range(ts time.Time, f func(key interface{}, value interfac
 	}
 }
 
-func (self * Cache_t) Remove(key interface{}) {
-	self.c.Remove(key)
+func (self * Cache_t) Remove(key interface{}) bool {
+	return self.c.Remove(key)
 }
 
 func (self * Cache_t) Size() int {

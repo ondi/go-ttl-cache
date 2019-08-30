@@ -24,10 +24,11 @@ func (self * SyncCache_t) Flush(ts time.Time) {
 	self.mx.Unlock()
 }
 
-func (self * SyncCache_t) Remove(key interface{}) {
+func (self * SyncCache_t) Remove(key interface{}) (ok bool) {
 	self.mx.Lock()
-	self.Cache_t.Remove(key)
+	ok = self.Cache_t.Remove(key)
 	self.mx.Unlock()
+	return
 }
 
 func (self * SyncCache_t) Create(ts time.Time, key interface{}, value func() interface{}) (res interface{}, ok bool) {
