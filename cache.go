@@ -18,28 +18,13 @@ type Value_t struct {
 	Value interface{}
 }
 
-type Evict interface {
-	PushBackNoWait(interface{}) bool
-}
+type Evict func(interface{}) bool
 
 type Cache_t struct {
 	c * cache.Cache_t
 	limit int
 	ttl time.Duration
 	evict Evict
-}
-
-type Evict_t []Value_t
-
-func (self * Evict_t) PushBackNoWait(value interface{}) bool {
-	*self = append(*self, value.(Value_t))
-	return true
-}
-
-type Drop_t struct {}
-
-func (Drop_t) PushBackNoWait(interface{}) bool {
-	return true
 }
 
 func New(limit int, ttl time.Duration, evict Evict) (self * Cache_t) {
@@ -60,7 +45,7 @@ func New(limit int, ttl time.Duration, evict Evict) (self * Cache_t) {
 func (self * Cache_t) flush(ts time.Time, it * cache.Value_t, keep int) bool {
 	if self.c.Size() > keep || ts.Sub(it.Value().(Mapped_t).ts) > self.ttl {
 		self.c.Remove(it.Key())
-		self.evict.PushBackNoWait(Value_t{Key: it.Key(), Value: it.Value().(Mapped_t).Value})
+		self.evict(Value_t{Key: it.Key(), Value: it.Value().(Mapped_t).Value})
 		return true
 	}
 	return false

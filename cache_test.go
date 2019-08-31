@@ -13,7 +13,7 @@ import "github.com/ondi/go-queue"
 func ExampleTtlCache1() {
 	var ok bool
 	q := queue.New(1000)
-	c := NewSync(2, time.Second, q)
+	c := NewSync(2, time.Second, q.PushBackNoWait)
 	
 	c.Update(time.Now(), 1, func() interface{} {return 1})
 	c.Get(time.Now(), 1)
