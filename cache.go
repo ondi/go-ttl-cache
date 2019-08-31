@@ -20,6 +20,8 @@ type Value_t struct {
 
 type Evict func(interface{}) bool
 
+func Drop(interface{}) bool {return true}
+
 type Cache_t struct {
 	c * cache.Cache_t
 	limit int

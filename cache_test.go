@@ -33,6 +33,28 @@ true
 */
 }
 
+func ExampleTtlCache2() {
+	var ok bool
+	c := NewSync(2, time.Second, Drop)
+	
+	c.Update(time.Now(), 1, func() interface{} {return 10})
+	c.Get(time.Now(), 1)
+	c.Update(time.Now(), 2, func() interface{} {return 20})
+	c.Get(time.Now(), 1)
+	c.Update(time.Now(), 3, func() interface{} {return 30})
+	_, ok = c.Get(time.Now(), 1)
+	fmt.Printf("%v\n", ok)
+	_, ok = c.Get(time.Now(), 2)
+	fmt.Printf("%v\n", ok)
+	_, ok = c.Get(time.Now(), 3)
+	fmt.Printf("%v\n", ok)
+/* Output:
+true
+false
+true
+*/
+}
+
 func TtlCacheTest1(t * testing.T) {
 
 }
