@@ -4,5 +4,6 @@ go 1.12
 
 require (
 	github.com/ondi/go-cache v0.0.0-20190830225141-57354c8602d7
+	github.com/ondi/go-list v0.0.0-20190831080444-6cef26fe3851 // indirect
 	github.com/ondi/go-queue v0.0.0-20190822073617-3000389f4424
 )
