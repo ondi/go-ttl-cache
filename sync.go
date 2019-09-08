@@ -31,30 +31,58 @@ func (self * SyncCache_t) Remove(key interface{}) (ok bool) {
 	return
 }
 
-func (self * SyncCache_t) Create(ts time.Time, key interface{}, value func() interface{}) (res interface{}, ok bool) {
+func (self * SyncCache_t) CreateFront(ts time.Time, key interface{}, value func() interface{}) (res interface{}, ok bool) {
 	self.mx.Lock()
-	res, ok = self.Cache_t.Create(ts, key, value)
+	res, ok = self.Cache_t.CreateFront(ts, key, value)
 	self.mx.Unlock()
 	return
 }
 
-func (self * SyncCache_t) Push(ts time.Time, key interface{}, value func () interface{}) (res interface{}, ok bool) {
+func (self * SyncCache_t) CreateBack(ts time.Time, key interface{}, value func() interface{}) (res interface{}, ok bool) {
 	self.mx.Lock()
-	res, ok = self.Cache_t.Push(ts, key, value)
+	res, ok = self.Cache_t.CreateBack(ts, key, value)
 	self.mx.Unlock()
 	return
 }
 
-func (self * SyncCache_t) Update(ts time.Time, key interface{}, value func() interface{}) (res interface{}, ok bool) {
+func (self * SyncCache_t) PushFront(ts time.Time, key interface{}, value func () interface{}) (res interface{}, ok bool) {
 	self.mx.Lock()
-	res, ok = self.Cache_t.Update(ts, key, value)
+	res, ok = self.Cache_t.PushFront(ts, key, value)
 	self.mx.Unlock()
 	return
 }
 
-func (self * SyncCache_t) Get(ts time.Time, key interface{}) (res interface{}, ok bool) {
+func (self * SyncCache_t) PushBack(ts time.Time, key interface{}, value func () interface{}) (res interface{}, ok bool) {
 	self.mx.Lock()
-	res, ok = self.Cache_t.Get(ts, key)
+	res, ok = self.Cache_t.PushBack(ts, key, value)
+	self.mx.Unlock()
+	return
+}
+
+func (self * SyncCache_t) UpdateFront(ts time.Time, key interface{}, value func() interface{}) (res interface{}, ok bool) {
+	self.mx.Lock()
+	res, ok = self.Cache_t.UpdateFront(ts, key, value)
+	self.mx.Unlock()
+	return
+}
+
+func (self * SyncCache_t) UpdateBack(ts time.Time, key interface{}, value func() interface{}) (res interface{}, ok bool) {
+	self.mx.Lock()
+	res, ok = self.Cache_t.UpdateBack(ts, key, value)
+	self.mx.Unlock()
+	return
+}
+
+func (self * SyncCache_t) FindFront(ts time.Time, key interface{}) (res interface{}, ok bool) {
+	self.mx.Lock()
+	res, ok = self.Cache_t.FindFront(ts, key)
+	self.mx.Unlock()
+	return
+}
+
+func (self * SyncCache_t) FindBack(ts time.Time, key interface{}) (res interface{}, ok bool) {
+	self.mx.Lock()
+	res, ok = self.Cache_t.FindBack(ts, key)
 	self.mx.Unlock()
 	return
 }
@@ -66,16 +94,29 @@ func (self * SyncCache_t) Find(ts time.Time, key interface{}) (res interface{}, 
 	return
 }
 
-func (self * SyncCache_t) LeastTs(ts time.Time) (t time.Time, ok bool) {
+func (self * SyncCache_t) FrontTs(ts time.Time) (t time.Time, ok bool) {
 	self.mx.Lock()
-	t, ok = self.Cache_t.LeastTs(ts)
+	t, ok = self.Cache_t.FrontTs(ts)
 	self.mx.Unlock()
 	return
 }
 
-func (self * SyncCache_t) Range(ts time.Time, f func(key interface{}, value interface{}) bool) {
+func (self * SyncCache_t) BackTs(ts time.Time) (t time.Time, ok bool) {
 	self.mx.Lock()
-	self.Cache_t.Range(ts, f)
+	t, ok = self.Cache_t.BackTs(ts)
+	self.mx.Unlock()
+	return
+}
+
+func (self * SyncCache_t) RangeFront(ts time.Time, f func(key interface{}, value interface{}) bool) {
+	self.mx.Lock()
+	self.Cache_t.RangeFront(ts, f)
+	self.mx.Unlock()
+}
+
+func (self * SyncCache_t) RangeBack(ts time.Time, f func(key interface{}, value interface{}) bool) {
+	self.mx.Lock()
+	self.Cache_t.RangeBack(ts, f)
 	self.mx.Unlock()
 }
 
