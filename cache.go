@@ -147,20 +147,24 @@ func (self * Cache_t) BackTs(ts time.Time) (time.Time, bool) {
 	return time.Time{}, false
 }
 
-func (self * Cache_t) RangeFront(ts time.Time, f func(key interface{}, value interface{}) bool) {
+func (self * Cache_t) RangeFrontBack(ts time.Time, f func(key interface{}, value interface{}) bool) {
 	self.Flush(ts)
-	for it := self.c.Front(); it != self.c.End(); it = it.Next() {
-		if f(it.Key(), it.Value().(Mapped_t).Value) == false {
+	for i := 0; i < self.c.Size(); i++ {
+		if it := self.c.Front(); f(it.Key(), it.Value().(Mapped_t).Value) == false {
 			return
+		} else {
+			cache.MoveBefore(it, self.c.End())
 		}
 	}
 }
 
-func (self * Cache_t) RangeBack(ts time.Time, f func(key interface{}, value interface{}) bool) {
+func (self * Cache_t) RangeBackFront(ts time.Time, f func(key interface{}, value interface{}) bool) {
 	self.Flush(ts)
-	for it := self.c.Back(); it != self.c.End(); it = it.Prev() {
-		if f(it.Key(), it.Value().(Mapped_t).Value) == false {
+	for i := 0; i < self.c.Size(); i++ {
+		if it := self.c.Back(); f(it.Key(), it.Value().(Mapped_t).Value) == false {
 			return
+		} else {
+			cache.MoveAfter(it, self.c.End())
 		}
 	}
 }

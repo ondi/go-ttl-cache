@@ -108,15 +108,15 @@ func (self * SyncCache_t) BackTs(ts time.Time) (t time.Time, ok bool) {
 	return
 }
 
-func (self * SyncCache_t) RangeFront(ts time.Time, f func(key interface{}, value interface{}) bool) {
+func (self * SyncCache_t) RangeFrontBack(ts time.Time, f func(key interface{}, value interface{}) bool) {
 	self.mx.Lock()
-	self.Cache_t.RangeFront(ts, f)
+	self.Cache_t.RangeFrontBack(ts, f)
 	self.mx.Unlock()
 }
 
-func (self * SyncCache_t) RangeBack(ts time.Time, f func(key interface{}, value interface{}) bool) {
+func (self * SyncCache_t) RangeBackFront(ts time.Time, f func(key interface{}, value interface{}) bool) {
 	self.mx.Lock()
-	self.Cache_t.RangeBack(ts, f)
+	self.Cache_t.RangeBackFront(ts, f)
 	self.mx.Unlock()
 }
 
