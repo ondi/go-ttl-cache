@@ -45,7 +45,7 @@ func (self * SyncCache_t) Push(ts time.Time, key interface{}, value func () inte
 	return
 }
 
-func (self * SyncCache_t) Update(ts time.Time, key interface{}, value func() interface{}) (res interface{}, ok bool) {
+func (self * SyncCache_t) Update(ts time.Time, key interface{}, value func(interface{}) interface{}) (res interface{}, ok bool) {
 	self.mx.Lock()
 	res, ok = self.Cache_t.Update(ts, key, value)
 	self.mx.Unlock()

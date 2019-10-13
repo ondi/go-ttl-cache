@@ -73,9 +73,9 @@ func (self * Cache_t) Push(ts time.Time, key interface{}, value func() interface
 	return
 }
 
-func (self * Cache_t) Update(ts time.Time, key interface{}, value func() interface{}) (res interface{}, ok bool) {
+func (self * Cache_t) Update(ts time.Time, key interface{}, value func(interface{}) interface{}) (res interface{}, ok bool) {
 	var it * cache.Value_t
-	it, ok = self.c.UpdateFront(key, func() interface{} {return Mapped_t{Value: value(), ts: ts}})
+	it, ok = self.c.UpdateFront(key, func(prev interface{}) interface{} {return Mapped_t{Value: value(prev.(Mapped_t).Value), ts: ts}})
 	res = it.Value().(Mapped_t).Value
 	self.Flush(ts)
 	return
