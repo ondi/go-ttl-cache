@@ -18,9 +18,9 @@ type Value_t struct {
 	Value interface{}
 }
 
-type Evict func(interface{}) bool
+type Evict func(interface{}) int
 
-func Drop(interface{}) bool {return true}
+func Drop(interface{}) int {return 0}
 
 type Cache_t struct {
 	c * cache.Cache_t
