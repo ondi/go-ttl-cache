@@ -115,9 +115,10 @@ func (self * Cache_t) Range(ts time.Time, f func(key interface{}, value interfac
 	}
 }
 
-func (self * Cache_t) Remove(ts time.Time, key interface{}) bool {
+func (self * Cache_t) Remove(ts time.Time, key interface{}) (ok bool) {
 	self.Flush(ts)
-	return self.c.Remove(key)
+	_, ok = self.c.Remove(key)
+	return
 }
 
 func (self * Cache_t) Size() int {
