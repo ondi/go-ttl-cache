@@ -66,9 +66,9 @@ func (self * SyncCache_t) Find(ts time.Time, key interface{}) (res interface{}, 
 	return
 }
 
-func (self * SyncCache_t) BackTs(ts time.Time) (t time.Time, ok bool) {
+func (self * SyncCache_t) LeastTs(ts time.Time) (t time.Time, ok bool) {
 	self.mx.Lock()
-	t, ok = self.Cache_t.BackTs(ts)
+	t, ok = self.Cache_t.LeastTs(ts)
 	self.mx.Unlock()
 	return
 }
