@@ -85,7 +85,7 @@ func (self * Cache_t) Update(ts time.Time, key interface{}, value func(interface
 
 func (self * Cache_t) Get(ts time.Time, key interface{}) (interface{}, bool) {
 	self.Flush(ts)
-	if it := self.c.FindBack(key); it != self.c.End() {
+	if it, ok := self.c.FindBack(key); ok {
 		it.Update(Mapped_t{Value: it.Value().(Mapped_t).Value, ts: ts.Add(self.ttl)})
 		return it.Value().(Mapped_t).Value, true
 	}
@@ -94,7 +94,7 @@ func (self * Cache_t) Get(ts time.Time, key interface{}) (interface{}, bool) {
 
 func (self * Cache_t) Find(ts time.Time, key interface{}) (interface{}, bool) {
 	self.Flush(ts)
-	if it := self.c.Find(key); it != self.c.End() {
+	if it, ok := self.c.Find(key); ok {
 		return it.Value().(Mapped_t).Value, true
 	}
 	return nil, false
