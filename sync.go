@@ -66,9 +66,9 @@ func (self * SyncCache_t) Find(ts time.Time, key interface{}) (res interface{}, 
 	return
 }
 
-func (self * SyncCache_t) LeastTs(ts time.Time) (diff time.Duration) {
+func (self * SyncCache_t) LeastDiff(ts time.Time) (diff time.Duration, ok bool) {
 	self.mx.Lock()
-	diff = self.Cache_t.LeastTs(ts)
+	diff, ok = self.Cache_t.LeastDiff(ts)
 	self.mx.Unlock()
 	return
 }

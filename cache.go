@@ -100,12 +100,12 @@ func (self * Cache_t) Find(ts time.Time, key interface{}) (interface{}, bool) {
 	return nil, false
 }
 
-func (self * Cache_t) LeastTs(ts time.Time) (diff time.Duration) {
+func (self * Cache_t) LeastDiff(ts time.Time) (time.Duration, bool) {
 	self.Flush(ts)
 	if self.c.Size() > 0 {
-		diff = self.c.Front().Value().(Mapped_t).ts.Sub(ts)
+		return self.c.Front().Value().(Mapped_t).ts.Sub(ts), true
 	}
-	return
+	return 0, false
 }
 
 func (self * Cache_t) Range(ts time.Time, f func(key interface{}, value interface{}) bool) {
