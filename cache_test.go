@@ -20,6 +20,7 @@ func ExampleTtlCache1() {
 	c.Create(time.Now(), 2, func() interface{} {return 2})
 	c.Get(time.Now(), 1)
 	c.Create(time.Now(), 3, func() interface{} {return 3})
+	c.Update(time.Now(), 4, func(interface{}) interface{} {return 4})
 	_, ok = c.Get(time.Now(), 1)
 	fmt.Printf("%v\n", ok)
 	_, ok = c.Get(time.Now(), 2)
@@ -42,6 +43,7 @@ func ExampleTtlCache2() {
 	c.Push(time.Now(), 2, func() interface{} {return 20})
 	c.Get(time.Now(), 1)
 	c.Push(time.Now(), 3, func() interface{} {return 30})
+	c.Update(time.Now(), 4, func(interface{}) interface{} {return 40})
 	_, ok = c.Get(time.Now(), 1)
 	fmt.Printf("%v\n", ok)
 	_, ok = c.Get(time.Now(), 2)
@@ -66,6 +68,7 @@ func ExampleTtlCache3() {
 	c.Push(time.Now(), 6, func() interface{} {return 60})
 	
 	c.Update(time.Now(), 1, func(p interface{}) interface{} {return p.(int) + 100})
+	c.Update(time.Now(), 7, func(p interface{}) interface{} {return p.(int) + 100})
 
 	c.Range(time.Now(), func(key interface{}, value interface{}) bool {
 		fmt.Printf("%v %v\n", key, value)

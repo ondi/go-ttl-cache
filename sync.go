@@ -45,6 +45,13 @@ func (self * SyncCache_t) Update(ts time.Time, key interface{}, value func(inter
 	return
 }
 
+func (self * SyncCache_t) Refresh(ts time.Time, key interface{}, value func(interface{}) interface{}) (res interface{}, ok bool) {
+	self.mx.Lock()
+	res, ok = self.Cache_t.Refresh(ts, key, value)
+	self.mx.Unlock()
+	return
+}
+
 func (self * SyncCache_t) Get(ts time.Time, key interface{}) (res interface{}, ok bool) {
 	self.mx.Lock()
 	res, ok = self.Cache_t.Get(ts, key)
