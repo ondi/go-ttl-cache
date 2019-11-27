@@ -24,13 +24,6 @@ func (self * SyncCache_t) Flush(ts time.Time) {
 	self.mx.Unlock()
 }
 
-func (self * SyncCache_t) Remove(ts time.Time, key interface{}) (ok bool) {
-	self.mx.Lock()
-	ok = self.Cache_t.Remove(ts, key)
-	self.mx.Unlock()
-	return
-}
-
 func (self * SyncCache_t) Create(ts time.Time, key interface{}, value func() interface{}) (res interface{}, ok bool) {
 	self.mx.Lock()
 	res, ok = self.Cache_t.Create(ts, key, value)
@@ -62,6 +55,13 @@ func (self * SyncCache_t) Get(ts time.Time, key interface{}) (res interface{}, o
 func (self * SyncCache_t) Find(ts time.Time, key interface{}) (res interface{}, ok bool) {
 	self.mx.Lock()
 	res, ok = self.Cache_t.Find(ts, key)
+	self.mx.Unlock()
+	return
+}
+
+func (self * SyncCache_t) Remove(ts time.Time, key interface{}) (res interface{}, ok bool) {
+	self.mx.Lock()
+	res, ok = self.Cache_t.Remove(ts, key)
 	self.mx.Unlock()
 	return
 }
