@@ -46,8 +46,8 @@ func New(limit int, ttl time.Duration, evict Evict) (self * Cache_t) {
 
 func (self * Cache_t) flush(ts time.Time, it * cache.Value_t, keep int) bool {
 	if self.c.Size() > keep || ts.After(it.Value().(Mapped_t).ts) {
-		self.evict(Value_t{Key: it.Key(), Value: it.Value().(Mapped_t).Value})
 		self.c.Remove(it.Key())
+		self.evict(Value_t{Key: it.Key(), Value: it.Value().(Mapped_t).Value})
 		return true
 	}
 	return false
