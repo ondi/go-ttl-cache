@@ -86,7 +86,7 @@ func (self * Cache_t) Update(ts time.Time, key interface{}, value func(interface
 
 func (self * Cache_t) Refresh(ts time.Time, key interface{}, value func(interface{}) interface{}) (res interface{}, ok bool) {
 	var it * cache.Value_t
-	if it, ok = self.c.Update(key, func(prev interface{}) interface{} {return Mapped_t{Value: value(prev.(Mapped_t).Value), ts: ts.Add(self.ttl)}}); ok {
+	if it, ok = self.c.Update(key, func(prev interface{}) interface{} {return Mapped_t{Value: value(prev.(Mapped_t).Value), ts: prev.(Mapped_t).ts}}); ok {
 		res = it.Value().(Mapped_t).Value
 	}
 	self.Flush(ts)
