@@ -86,7 +86,7 @@ func (self * SyncCache_t) Range(ts time.Time, f func(key interface{}, value inte
 	self.mx.Unlock()
 }
 
-func (self * SyncCache_t) RangeTs(ts time.Time, f func(key interface{}, value interface{}, ts time.Time) bool) {
+func (self * SyncCache_t) RangeTs(ts time.Time, f func(key interface{}, value interface{}, diff time.Duration) bool) {
 	self.mx.Lock()
 	self.Cache_t.RangeTs(ts, f)
 	self.mx.Unlock()
