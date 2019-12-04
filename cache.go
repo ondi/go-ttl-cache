@@ -135,6 +135,15 @@ func (self * Cache_t) Range(ts time.Time, f func(key interface{}, value interfac
 	}
 }
 
+func (self * Cache_t) RangeTs(ts time.Time, f func(key interface{}, value interface{}, ts time.Time) bool) {
+	self.Flush(ts)
+	for it := self.c.Front(); it != self.c.End(); it = it.Next() {
+		if f(it.Key(), it.Value().(Mapped_t).Value, it.Value().(Mapped_t).ts) == false {
+			return
+		}
+	}
+}
+
 func (self * Cache_t) Size() int {
 	return self.c.Size()
 }
