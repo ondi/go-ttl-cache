@@ -10,7 +10,7 @@ import "testing"
 
 import "github.com/ondi/go-queue"
 
-func ExampleTtlCache1() {
+func Example_ttl_cache1() {
 	var ok bool
 	q := queue.New(1000)
 	c := NewSync(2, time.Second, q.PushBackNoWait)
@@ -34,7 +34,7 @@ true
 */
 }
 
-func ExampleTtlCache2() {
+func Example_ttl_cache2() {
 	var ok bool
 	c := NewSync(2, time.Second, Drop)
 	
@@ -57,7 +57,7 @@ true
 */
 }
 
-func ExampleTtlCache3() {
+func Example_ttl_cache3() {
 	c := NewSync(10, time.Second, Drop)
 	
 	c.Create(time.Now(), 1, func() interface{} {return 10})
