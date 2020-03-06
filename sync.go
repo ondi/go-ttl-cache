@@ -68,16 +68,16 @@ func (self *SyncCache_t) Update2(ts time.Time, key interface{}, value func(inter
 	return
 }
 
-func (self *SyncCache_t) SetValue(ts time.Time, key interface{}, value func(interface{}) interface{}) (res interface{}, ok bool) {
+func (self *SyncCache_t) Set(ts time.Time, key interface{}, value func(interface{}) interface{}) (res interface{}, ok bool) {
 	self.mx.Lock()
-	res, ok = self.Cache_t.SetValue(ts, key, value)
+	res, ok = self.Cache_t.Set(ts, key, value)
 	self.mx.Unlock()
 	return
 }
 
-func (self *SyncCache_t) SetValue2(ts time.Time, key interface{}, value func(interface{}) (interface{}, error)) (res interface{}, ok bool, err error) {
+func (self *SyncCache_t) Set2(ts time.Time, key interface{}, value func(interface{}) (interface{}, error)) (res interface{}, ok bool, err error) {
 	self.mx.Lock()
-	res, ok, err = self.Cache_t.SetValue2(ts, key, value)
+	res, ok, err = self.Cache_t.Set2(ts, key, value)
 	self.mx.Unlock()
 	return
 }
