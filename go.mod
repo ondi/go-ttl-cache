@@ -1,8 +1,8 @@
 module github.com/ondi/go-ttl-cache
 
-go 1.14
+go 1.15
 
 require (
-	github.com/ondi/go-cache v0.0.0-20200531212647-19362aab9927
-	github.com/ondi/go-queue v0.0.0-20191016133056-ba6a0d6accab
+	github.com/ondi/go-cache v0.0.0-20200925074142-541f56ffea7d
+	github.com/ondi/go-queue v0.0.0-20191016140515-ea56110cb781
 )

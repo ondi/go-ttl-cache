@@ -40,16 +40,16 @@ func (self *SyncCache_t) Create2(ts time.Time, key interface{}, value func() (in
 	return
 }
 
-func (self *SyncCache_t) Push(ts time.Time, key interface{}, value func() interface{}) (res interface{}, ok bool) {
+func (self *SyncCache_t) Write(ts time.Time, key interface{}, value_new func() interface{}, value_update func(interface{}) interface{}) (res interface{}, ok bool) {
 	self.mx.Lock()
-	res, ok = self.Cache_t.Push(ts, key, value)
+	res, ok = self.Cache_t.Write(ts, key, value_new, value_update)
 	self.mx.Unlock()
 	return
 }
 
-func (self *SyncCache_t) Push2(ts time.Time, key interface{}, value func() (interface{}, error)) (res interface{}, ok bool, err error) {
+func (self *SyncCache_t) Write2(ts time.Time, key interface{}, value_new func() (interface{}, error), value_update func(interface{}) (interface{}, error)) (res interface{}, ok bool, err error) {
 	self.mx.Lock()
-	res, ok, err = self.Cache_t.Push2(ts, key, value)
+	res, ok, err = self.Cache_t.Write2(ts, key, value_new, value_update)
 	self.mx.Unlock()
 	return
 }
@@ -68,16 +68,16 @@ func (self *SyncCache_t) Update2(ts time.Time, key interface{}, value func(inter
 	return
 }
 
-func (self *SyncCache_t) Set(ts time.Time, key interface{}, value func(interface{}) interface{}) (res interface{}, ok bool) {
+func (self *SyncCache_t) Refresh(ts time.Time, key interface{}, value func(interface{}) interface{}) (res interface{}, ok bool) {
 	self.mx.Lock()
-	res, ok = self.Cache_t.Set(ts, key, value)
+	res, ok = self.Cache_t.Refresh(ts, key, value)
 	self.mx.Unlock()
 	return
 }
 
-func (self *SyncCache_t) Set2(ts time.Time, key interface{}, value func(interface{}) (interface{}, error)) (res interface{}, ok bool, err error) {
+func (self *SyncCache_t) Refresh2(ts time.Time, key interface{}, value func(interface{}) (interface{}, error)) (res interface{}, ok bool, err error) {
 	self.mx.Lock()
-	res, ok, err = self.Cache_t.Set2(ts, key, value)
+	res, ok, err = self.Cache_t.Refresh2(ts, key, value)
 	self.mx.Unlock()
 	return
 }
