@@ -91,15 +91,15 @@ func (self *Cache_t) Create2(ts time.Time, key interface{}, value func() (interf
 
 func (self *Cache_t) Write(ts time.Time, key interface{}, value_new func() interface{}, value_update func(interface{}) interface{}) (res interface{}, ok bool) {
 	var it *cache.Value_t
-	it, _ = self.c.WriteBack(
+	it, ok = self.c.PushBack(
 		key,
 		func() interface{} {
 			return Mapped_t{Value: value_new(), ts: ts.Add(self.ttl)}
 		},
-		func(prev interface{}) interface{} {
-			return Mapped_t{Value: value_update(prev.(Mapped_t).Value), ts: ts.Add(self.ttl)}
-		},
 	)
+	if !ok {
+		it.Update(Mapped_t{Value: it.Value().(Mapped_t).Value, ts: ts.Add(self.ttl)})
+	}
 	res = it.Value().(Mapped_t).Value
 	self.Flush(ts)
 	return
@@ -107,7 +107,7 @@ func (self *Cache_t) Write(ts time.Time, key interface{}, value_new func() inter
 
 func (self *Cache_t) Write2(ts time.Time, key interface{}, value_new func() (interface{}, error), value_update func(interface{}) (interface{}, error)) (res interface{}, ok bool, err error) {
 	var it *cache.Value_t
-	it, ok, err = self.c.WriteBack2(
+	it, ok, err = self.c.PushBack2(
 		key,
 		func() (v interface{}, err error) {
 			if v, err = value_new(); err != nil {
@@ -115,28 +115,24 @@ func (self *Cache_t) Write2(ts time.Time, key interface{}, value_new func() (int
 			}
 			return Mapped_t{Value: v, ts: ts.Add(self.ttl)}, nil
 		},
-		func(prev interface{}) (v interface{}, err error) {
-			if v, err = value_update(prev.(Mapped_t).Value); err != nil {
-				return
-			}
-			return Mapped_t{Value: v, ts: ts.Add(self.ttl)}, nil
-		},
 	)
-	res = it.Value().(Mapped_t).Value
+	if !ok {
+		if res, err = value_update(it.Value().(Mapped_t).Value); err != nil {
+			return
+		}
+		it.Update(Mapped_t{Value: res, ts: ts.Add(self.ttl)})
+	} else {
+		res = it.Value().(Mapped_t).Value
+	}
 	self.Flush(ts)
 	return
 }
 
 func (self *Cache_t) Update(ts time.Time, key interface{}, value func(interface{}) interface{}) (res interface{}, ok bool) {
 	var it *cache.Value_t
-	it, ok = self.c.UpdateBack(
-		key,
-		func(prev interface{}) interface{} {
-			return Mapped_t{Value: value(prev.(Mapped_t).Value), ts: ts.Add(self.ttl)}
-		},
-	)
-	if ok {
-		res = it.Value().(Mapped_t).Value
+	if it, ok = self.c.FindBack(key); ok {
+		res = value(it.Value().(Mapped_t).Value)
+		it.Update(Mapped_t{Value: res, ts: ts.Add(self.ttl)})
 	}
 	self.Flush(ts)
 	return
@@ -144,17 +140,11 @@ func (self *Cache_t) Update(ts time.Time, key interface{}, value func(interface{
 
 func (self *Cache_t) Update2(ts time.Time, key interface{}, value func(interface{}) (interface{}, error)) (res interface{}, ok bool, err error) {
 	var it *cache.Value_t
-	it, ok, err = self.c.UpdateBack2(
-		key,
-		func(prev interface{}) (v interface{}, err error) {
-			if v, err = value(prev.(Mapped_t).Value); err != nil {
-				return
-			}
-			return Mapped_t{Value: v, ts: ts.Add(self.ttl)}, nil
-		},
-	)
-	if ok {
-		res = it.Value().(Mapped_t).Value
+	if it, ok = self.c.FindBack(key); ok {
+		if res, err = value(it.Value().(Mapped_t).Value); err != nil {
+			return
+		}
+		it.Update(Mapped_t{Value: res, ts: ts.Add(self.ttl)})
 	}
 	self.Flush(ts)
 	return
@@ -162,14 +152,9 @@ func (self *Cache_t) Update2(ts time.Time, key interface{}, value func(interface
 
 func (self *Cache_t) Refresh(ts time.Time, key interface{}, value func(interface{}) interface{}) (res interface{}, ok bool) {
 	var it *cache.Value_t
-	it, ok = self.c.Update(
-		key,
-		func(prev interface{}) interface{} {
-			return Mapped_t{Value: value(prev.(Mapped_t).Value), ts: prev.(Mapped_t).ts}
-		},
-	)
-	if ok {
-		res = it.Value().(Mapped_t).Value
+	if it, ok = self.c.FindBack(key); ok {
+		res = value(it.Value().(Mapped_t).Value)
+		it.Update(Mapped_t{Value: res, ts: it.Value().(Mapped_t).ts})
 	}
 	self.Flush(ts)
 	return
@@ -177,17 +162,11 @@ func (self *Cache_t) Refresh(ts time.Time, key interface{}, value func(interface
 
 func (self *Cache_t) Refresh2(ts time.Time, key interface{}, value func(interface{}) (interface{}, error)) (res interface{}, ok bool, err error) {
 	var it *cache.Value_t
-	it, ok, err = self.c.Update2(
-		key,
-		func(prev interface{}) (v interface{}, err error) {
-			if v, err = value(prev.(Mapped_t).Value); err != nil {
-				return
-			}
-			return Mapped_t{Value: v, ts: prev.(Mapped_t).ts}, nil
-		},
-	)
-	if ok {
-		res = it.Value().(Mapped_t).Value
+	if it, ok = self.c.FindBack(key); ok {
+		if res, err = value(it.Value().(Mapped_t).Value); err != nil {
+			return
+		}
+		it.Update(Mapped_t{Value: res, ts: it.Value().(Mapped_t).ts})
 	}
 	self.Flush(ts)
 	return
