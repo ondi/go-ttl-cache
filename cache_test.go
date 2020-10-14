@@ -8,14 +8,11 @@ import (
 	"fmt"
 	"testing"
 	"time"
-
-	"github.com/ondi/go-queue"
 )
 
 func Example_ttl_cache1() {
 	var ok bool
-	q := queue.New(1000)
-	c := NewSync(2, time.Second, q.PushBackNoWait)
+	c := NewSync(2, time.Second, Drop)
 
 	c.Create(time.Now(), 1, func() interface{} { return 1 })
 	c.Get(time.Now(), 1)
