@@ -103,9 +103,9 @@ func (self *SyncCache_t) Remove(ts time.Time, key interface{}) (res interface{},
 	return
 }
 
-func (self *SyncCache_t) LeastDiff(ts time.Time) (diff time.Duration, ok bool) {
+func (self *SyncCache_t) LeastTs(ts time.Time) (diff time.Time, ok bool) {
 	self.mx.Lock()
-	diff, ok = self.Cache_t.LeastDiff(ts)
+	diff, ok = self.Cache_t.LeastTs(ts)
 	self.mx.Unlock()
 	return
 }
@@ -116,7 +116,7 @@ func (self *SyncCache_t) Range(ts time.Time, f func(key interface{}, value inter
 	self.mx.Unlock()
 }
 
-func (self *SyncCache_t) RangeTs(ts time.Time, f func(key interface{}, value interface{}, diff time.Duration) bool) {
+func (self *SyncCache_t) RangeTs(ts time.Time, f func(key interface{}, value interface{}, ts time.Time) bool) {
 	self.mx.Lock()
 	self.Cache_t.RangeTs(ts, f)
 	self.mx.Unlock()

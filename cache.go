@@ -203,12 +203,12 @@ func (self *Cache_t) Remove(ts time.Time, key interface{}) (res interface{}, ok 
 	return
 }
 
-func (self *Cache_t) LeastDiff(ts time.Time) (time.Duration, bool) {
+func (self *Cache_t) LeastTs(ts time.Time) (time.Time, bool) {
 	self.Flush(ts)
 	if self.c.Size() > 0 {
-		return self.c.Front().Value.(mapped_t).ts.Sub(ts), true
+		return self.c.Front().Value.(mapped_t).ts, true
 	}
-	return self.ttl, false
+	return time.Time{}, false
 }
 
 func (self *Cache_t) Range(ts time.Time, f func(key interface{}, value interface{}) bool) {
@@ -220,10 +220,10 @@ func (self *Cache_t) Range(ts time.Time, f func(key interface{}, value interface
 	}
 }
 
-func (self *Cache_t) RangeTs(ts time.Time, f func(key interface{}, value interface{}, diff time.Duration) bool) {
+func (self *Cache_t) RangeTs(ts time.Time, f func(key interface{}, value interface{}, ts time.Time) bool) {
 	self.Flush(ts)
 	for it := self.c.Front(); it != self.c.End(); it = it.Next() {
-		if f(it.Key, it.Value.(mapped_t).value, it.Value.(mapped_t).ts.Sub(ts)) == false {
+		if f(it.Key, it.Value.(mapped_t).value, it.Value.(mapped_t).ts) == false {
 			return
 		}
 	}
