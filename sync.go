@@ -26,30 +26,30 @@ func (self *SyncCache_t) Flush(ts time.Time) {
 	self.mx.Unlock()
 }
 
-func (self *SyncCache_t) Create(ts time.Time, key interface{}, value func() interface{}) (res interface{}, ok bool) {
+func (self *SyncCache_t) Create(ts time.Time, key interface{}, value_new func() interface{}, value_update func(interface{}) interface{}) (res interface{}, ok bool) {
 	self.mx.Lock()
-	res, ok = self.Cache_t.Create(ts, key, value)
+	res, ok = self.Cache_t.Create(ts, key, value_new, value_update)
 	self.mx.Unlock()
 	return
 }
 
-func (self *SyncCache_t) Create2(ts time.Time, key interface{}, value func() (interface{}, error)) (res interface{}, ok bool, err error) {
+func (self *SyncCache_t) Create2(ts time.Time, key interface{}, value_new func() (interface{}, error), value_update func(interface{}) (interface{}, error)) (res interface{}, ok bool, err error) {
 	self.mx.Lock()
-	res, ok, err = self.Cache_t.Create2(ts, key, value)
+	res, ok, err = self.Cache_t.Create2(ts, key, value_new, value_update)
 	self.mx.Unlock()
 	return
 }
 
-func (self *SyncCache_t) Write(ts time.Time, key interface{}, value_new func() interface{}, value_update func(interface{}) interface{}) (res interface{}, ok bool) {
+func (self *SyncCache_t) Push(ts time.Time, key interface{}, value_new func() interface{}, value_update func(interface{}) interface{}) (res interface{}, ok bool) {
 	self.mx.Lock()
-	res, ok = self.Cache_t.Write(ts, key, value_new, value_update)
+	res, ok = self.Cache_t.Push(ts, key, value_new, value_update)
 	self.mx.Unlock()
 	return
 }
 
-func (self *SyncCache_t) Write2(ts time.Time, key interface{}, value_new func() (interface{}, error), value_update func(interface{}) (interface{}, error)) (res interface{}, ok bool, err error) {
+func (self *SyncCache_t) Push2(ts time.Time, key interface{}, value_new func() (interface{}, error), value_update func(interface{}) (interface{}, error)) (res interface{}, ok bool, err error) {
 	self.mx.Lock()
-	res, ok, err = self.Cache_t.Write2(ts, key, value_new, value_update)
+	res, ok, err = self.Cache_t.Push2(ts, key, value_new, value_update)
 	self.mx.Unlock()
 	return
 }

@@ -60,36 +60,46 @@ func (self *Cache_t) FlushLimit(ts time.Time, limit int) {
 	}
 }
 
-func (self *Cache_t) Create(ts time.Time, key interface{}, value func() interface{}) (res interface{}, ok bool) {
+func (self *Cache_t) Create(ts time.Time, key interface{}, value_new func() interface{}, value_update func(interface{}) interface{}) (res interface{}, ok bool) {
 	var it *cache.Value_t
 	it, ok = self.c.CreateBack(
 		key,
 		func() interface{} {
-			return mapped_t{value: value(), ts: ts.Add(self.ttl)}
+			return mapped_t{value: value_new(), ts: ts.Add(self.ttl)}
 		},
 	)
+	if !ok {
+		it.Value = mapped_t{value: value_update(it.Value.(mapped_t).value), ts: it.Value.(mapped_t).ts}
+	}
 	res = it.Value.(mapped_t).value
 	self.Flush(ts)
 	return
 }
 
-func (self *Cache_t) Create2(ts time.Time, key interface{}, value func() (interface{}, error)) (res interface{}, ok bool, err error) {
+func (self *Cache_t) Create2(ts time.Time, key interface{}, value_new func() (interface{}, error), value_update func(interface{}) (interface{}, error)) (res interface{}, ok bool, err error) {
 	var it *cache.Value_t
 	it, ok, err = self.c.CreateBack2(
 		key,
 		func() (v interface{}, err error) {
-			if v, err = value(); err != nil {
+			if v, err = value_new(); err != nil {
 				return
 			}
 			return mapped_t{value: v, ts: ts.Add(self.ttl)}, nil
 		},
 	)
-	res = it.Value.(mapped_t).value
+	if !ok {
+		if res, err = value_update(it.Value.(mapped_t).value); err != nil {
+			return
+		}
+		it.Value = mapped_t{value: res, ts: it.Value.(mapped_t).ts}
+	} else {
+		res = it.Value.(mapped_t).value
+	}
 	self.Flush(ts)
 	return
 }
 
-func (self *Cache_t) Write(ts time.Time, key interface{}, value_new func() interface{}, value_update func(interface{}) interface{}) (res interface{}, ok bool) {
+func (self *Cache_t) Push(ts time.Time, key interface{}, value_new func() interface{}, value_update func(interface{}) interface{}) (res interface{}, ok bool) {
 	var it *cache.Value_t
 	it, ok = self.c.PushBack(
 		key,
@@ -105,7 +115,7 @@ func (self *Cache_t) Write(ts time.Time, key interface{}, value_new func() inter
 	return
 }
 
-func (self *Cache_t) Write2(ts time.Time, key interface{}, value_new func() (interface{}, error), value_update func(interface{}) (interface{}, error)) (res interface{}, ok bool, err error) {
+func (self *Cache_t) Push2(ts time.Time, key interface{}, value_new func() (interface{}, error), value_update func(interface{}) (interface{}, error)) (res interface{}, ok bool, err error) {
 	var it *cache.Value_t
 	it, ok, err = self.c.PushBack2(
 		key,
