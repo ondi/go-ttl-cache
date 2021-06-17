@@ -81,11 +81,11 @@ func (self *Cache_t) Create2(ts time.Time, key interface{}, value_new func() (in
 	var it *cache.Value_t
 	it, ok, err = self.c.CreateBack2(
 		key,
-		func() (v interface{}, err error) {
-			if v, err = value_new(); err != nil {
+		func() (temp interface{}, err error) {
+			if res, err = value_new(); err != nil {
 				return
 			}
-			return mapped_t{value: v, ts: ts.Add(self.ttl)}, nil
+			return mapped_t{value: res, ts: ts.Add(self.ttl)}, nil
 		},
 	)
 	if !ok {
@@ -93,8 +93,6 @@ func (self *Cache_t) Create2(ts time.Time, key interface{}, value_new func() (in
 			return
 		}
 		it.Value = mapped_t{value: res, ts: it.Value.(mapped_t).ts}
-	} else {
-		res = it.Value.(mapped_t).value
 	}
 	return
 }
@@ -120,11 +118,11 @@ func (self *Cache_t) Push2(ts time.Time, key interface{}, value_new func() (inte
 	var it *cache.Value_t
 	it, ok, err = self.c.PushBack2(
 		key,
-		func() (v interface{}, err error) {
-			if v, err = value_new(); err != nil {
+		func() (temp interface{}, err error) {
+			if res, err = value_new(); err != nil {
 				return
 			}
-			return mapped_t{value: v, ts: ts.Add(self.ttl)}, nil
+			return mapped_t{value: res, ts: ts.Add(self.ttl)}, nil
 		},
 	)
 	if !ok {
@@ -132,8 +130,6 @@ func (self *Cache_t) Push2(ts time.Time, key interface{}, value_new func() (inte
 			return
 		}
 		it.Value = mapped_t{value: res, ts: ts.Add(self.ttl)}
-	} else {
-		res = it.Value.(mapped_t).value
 	}
 	return
 }
