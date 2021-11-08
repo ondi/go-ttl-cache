@@ -29,10 +29,10 @@ type Cache_t struct {
 func New(limit int, ttl time.Duration, evict Evict) (self *Cache_t) {
 	self = &Cache_t{}
 	self.c = cache.New()
-	if ttl <= 0 {
+	if ttl < 0 {
 		ttl = time.Duration(1<<63 - 1)
 	}
-	if limit <= 0 {
+	if limit < 0 {
 		limit = 1<<63 - 1
 	}
 	self.ttl = ttl
