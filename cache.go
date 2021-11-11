@@ -79,13 +79,13 @@ func (self *Cache_t) Create(ts time.Time, key interface{}, value_new func() inte
 func (self *Cache_t) Create2(ts time.Time, key interface{}, value_new func() (interface{}, error), value_update func(interface{}) (interface{}, error)) (res interface{}, ok bool, err error) {
 	self.Flush(ts)
 	var it *cache.Value_t
-	it, ok, err = self.c.CreateBack2(
+	it, ok = self.c.CreateBack2(
 		key,
-		func() (temp interface{}, err error) {
+		func() *cache.Value_t {
 			if res, err = value_new(); err != nil {
-				return
+				return nil
 			}
-			return mapped_t{value: res, ts: ts.Add(self.ttl)}, nil
+			return &cache.Value_t{Value: mapped_t{value: res, ts: ts.Add(self.ttl)}}
 		},
 	)
 	if !ok {
@@ -116,13 +116,13 @@ func (self *Cache_t) Push(ts time.Time, key interface{}, value_new func() interf
 func (self *Cache_t) Push2(ts time.Time, key interface{}, value_new func() (interface{}, error), value_update func(interface{}) (interface{}, error)) (res interface{}, ok bool, err error) {
 	self.Flush(ts)
 	var it *cache.Value_t
-	it, ok, err = self.c.PushBack2(
+	it, ok = self.c.PushBack2(
 		key,
-		func() (temp interface{}, err error) {
+		func() *cache.Value_t {
 			if res, err = value_new(); err != nil {
-				return
+				return nil
 			}
-			return mapped_t{value: res, ts: ts.Add(self.ttl)}, nil
+			return &cache.Value_t{Value: mapped_t{value: res, ts: ts.Add(self.ttl)}}
 		},
 	)
 	if !ok {
