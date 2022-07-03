@@ -26,58 +26,30 @@ func (self *SyncCache_t[Key_t, Mapped_t]) Flush(ts time.Time) {
 	self.mx.Unlock()
 }
 
-func (self *SyncCache_t[Key_t, Mapped_t]) Create(ts time.Time, key Key_t, value_new func() Mapped_t, value_update func(Mapped_t) Mapped_t) (res Mapped_t, ok bool) {
+func (self *SyncCache_t[Key_t, Mapped_t]) Create(ts time.Time, key Key_t, value_new func() Mapped_t, value_update func(*Mapped_t)) (res Mapped_t, ok bool) {
 	self.mx.Lock()
 	res, ok = self.cx.Create(ts, key, value_new, value_update)
 	self.mx.Unlock()
 	return
 }
 
-func (self *SyncCache_t[Key_t, Mapped_t]) Create2(ts time.Time, key Key_t, value_new func() (Mapped_t, error), value_update func(Mapped_t) (Mapped_t, error)) (res Mapped_t, ok bool, err error) {
-	self.mx.Lock()
-	res, ok, err = self.cx.Create2(ts, key, value_new, value_update)
-	self.mx.Unlock()
-	return
-}
-
-func (self *SyncCache_t[Key_t, Mapped_t]) Push(ts time.Time, key Key_t, value_new func() Mapped_t, value_update func(Mapped_t) Mapped_t) (res Mapped_t, ok bool) {
+func (self *SyncCache_t[Key_t, Mapped_t]) Push(ts time.Time, key Key_t, value_new func() Mapped_t, value_update func(*Mapped_t)) (res Mapped_t, ok bool) {
 	self.mx.Lock()
 	res, ok = self.cx.Push(ts, key, value_new, value_update)
 	self.mx.Unlock()
 	return
 }
 
-func (self *SyncCache_t[Key_t, Mapped_t]) Push2(ts time.Time, key Key_t, value_new func() (Mapped_t, error), value_update func(Mapped_t) (Mapped_t, error)) (res Mapped_t, ok bool, err error) {
-	self.mx.Lock()
-	res, ok, err = self.cx.Push2(ts, key, value_new, value_update)
-	self.mx.Unlock()
-	return
-}
-
-func (self *SyncCache_t[Key_t, Mapped_t]) Update(ts time.Time, key Key_t, value func(Mapped_t) Mapped_t) (res Mapped_t, ok bool) {
+func (self *SyncCache_t[Key_t, Mapped_t]) Update(ts time.Time, key Key_t, value func(*Mapped_t)) (res Mapped_t, ok bool) {
 	self.mx.Lock()
 	res, ok = self.cx.Update(ts, key, value)
 	self.mx.Unlock()
 	return
 }
 
-func (self *SyncCache_t[Key_t, Mapped_t]) Update2(ts time.Time, key Key_t, value func(Mapped_t) (Mapped_t, error)) (res Mapped_t, ok bool, err error) {
-	self.mx.Lock()
-	res, ok, err = self.cx.Update2(ts, key, value)
-	self.mx.Unlock()
-	return
-}
-
-func (self *SyncCache_t[Key_t, Mapped_t]) Replace(ts time.Time, key Key_t, value func(Mapped_t) Mapped_t) (res Mapped_t, ok bool) {
+func (self *SyncCache_t[Key_t, Mapped_t]) Replace(ts time.Time, key Key_t, value func(*Mapped_t)) (res Mapped_t, ok bool) {
 	self.mx.Lock()
 	res, ok = self.cx.Replace(ts, key, value)
-	self.mx.Unlock()
-	return
-}
-
-func (self *SyncCache_t[Key_t, Mapped_t]) Replace2(ts time.Time, key Key_t, value func(Mapped_t) (Mapped_t, error)) (res Mapped_t, ok bool, err error) {
-	self.mx.Lock()
-	res, ok, err = self.cx.Replace2(ts, key, value)
 	self.mx.Unlock()
 	return
 }
