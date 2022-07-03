@@ -69,7 +69,7 @@ func (self *Cache_t[Key_t, Mapped_t]) Create(ts time.Time, key Key_t, value_new 
 		},
 	)
 	if !ok {
-		it.Value = mapped_t[Mapped_t]{value: value_update(it.Value.value), ts: it.Value.ts}
+		it.Value.value = value_update(it.Value.value)
 	}
 	res = it.Value.value
 	return
@@ -90,7 +90,7 @@ func (self *Cache_t[Key_t, Mapped_t]) Create2(ts time.Time, key Key_t, value_new
 		if res, err = value_update(it.Value.value); err != nil {
 			return
 		}
-		it.Value = mapped_t[Mapped_t]{value: res, ts: it.Value.ts}
+		it.Value.value = res
 	}
 	return
 }
@@ -104,7 +104,8 @@ func (self *Cache_t[Key_t, Mapped_t]) Push(ts time.Time, key Key_t, value_new fu
 		},
 	)
 	if !ok {
-		it.Value = mapped_t[Mapped_t]{value: value_update(it.Value.value), ts: ts.Add(self.ttl)}
+		it.Value.value = value_update(it.Value.value)
+		it.Value.ts = ts.Add(self.ttl)
 	}
 	res = it.Value.value
 	return
@@ -125,7 +126,8 @@ func (self *Cache_t[Key_t, Mapped_t]) Push2(ts time.Time, key Key_t, value_new f
 		if res, err = value_update(it.Value.value); err != nil {
 			return
 		}
-		it.Value = mapped_t[Mapped_t]{value: res, ts: ts.Add(self.ttl)}
+		it.Value.value = res
+		it.Value.ts = ts.Add(self.ttl)
 	}
 	return
 }
@@ -135,7 +137,8 @@ func (self *Cache_t[Key_t, Mapped_t]) Update(ts time.Time, key Key_t, value func
 	it, ok := self.c.FindBack(key)
 	if ok {
 		res = value(it.Value.value)
-		it.Value = mapped_t[Mapped_t]{value: res, ts: ts.Add(self.ttl)}
+		it.Value.value = res
+		it.Value.ts = ts.Add(self.ttl)
 	}
 	return
 }
@@ -147,7 +150,8 @@ func (self *Cache_t[Key_t, Mapped_t]) Update2(ts time.Time, key Key_t, value fun
 		if res, err = value(it.Value.value); err != nil {
 			return
 		}
-		it.Value = mapped_t[Mapped_t]{value: res, ts: ts.Add(self.ttl)}
+		it.Value.value = res
+		it.Value.ts = ts.Add(self.ttl)
 	}
 	return
 }
@@ -157,7 +161,7 @@ func (self *Cache_t[Key_t, Mapped_t]) Replace(ts time.Time, key Key_t, value fun
 	it, ok := self.c.Find(key)
 	if ok {
 		res = value(it.Value.value)
-		it.Value = mapped_t[Mapped_t]{value: res, ts: it.Value.ts}
+		it.Value.value = res
 	}
 	return
 }
@@ -169,7 +173,7 @@ func (self *Cache_t[Key_t, Mapped_t]) Replace2(ts time.Time, key Key_t, value fu
 		if res, err = value(it.Value.value); err != nil {
 			return
 		}
-		it.Value = mapped_t[Mapped_t]{value: res, ts: it.Value.ts}
+		it.Value.value = res
 	}
 	return
 }
@@ -179,7 +183,8 @@ func (self *Cache_t[Key_t, Mapped_t]) Get(ts time.Time, key Key_t) (res Mapped_t
 	it, ok := self.c.FindBack(key);
 	if ok {
 		res = it.Value.value
-		it.Value = mapped_t[Mapped_t]{value: res, ts: ts.Add(self.ttl)}
+		it.Value.value = res
+		it.Value.ts = ts.Add(self.ttl)
 		return
 	}
 	return
