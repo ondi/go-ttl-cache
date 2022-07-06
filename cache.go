@@ -96,8 +96,8 @@ func (self *Cache_t[Key_t, Mapped_t]) Update(ts time.Time, key Key_t, value func
 	it, ok := self.c.FindBack(key)
 	if ok {
 		value(&it.Value.value)
-		res = it.Value.value
 		it.Value.ts = ts.Add(self.ttl)
+		res = it.Value.value
 	}
 	return
 }
@@ -118,7 +118,6 @@ func (self *Cache_t[Key_t, Mapped_t]) Get(ts time.Time, key Key_t) (res Mapped_t
 	if ok {
 		res = it.Value.value
 		it.Value.ts = ts.Add(self.ttl)
-		return
 	}
 	return
 }
@@ -128,7 +127,6 @@ func (self *Cache_t[Key_t, Mapped_t]) Find(ts time.Time, key Key_t) (res Mapped_
 	it, ok := self.c.Find(key);
 	if ok {
 		res = it.Value.value
-		return
 	}
 	return
 }
@@ -138,7 +136,6 @@ func (self *Cache_t[Key_t, Mapped_t]) Remove(ts time.Time, key Key_t) (res Mappe
 	it, ok := self.c.Remove(key)
 	if ok {
 		res = it.Value.value
-		return
 	}
 	return
 }
