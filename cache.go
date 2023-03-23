@@ -14,13 +14,13 @@ type Evict[Key_t comparable, Mapped_t any] func(key Key_t, value Mapped_t)
 
 func Drop[Key_t comparable, Mapped_t any](Key_t, Mapped_t) {}
 
-type mapped_t[Mapped_t any] struct {
+type Ttl_t[Mapped_t any] struct {
 	ts    time.Time
-	value Mapped_t
+	Value Mapped_t
 }
 
 type Cache_t[Key_t comparable, Mapped_t any] struct {
-	c     *cache.Cache_t[Key_t, mapped_t[Mapped_t]]
+	c     *cache.Cache_t[Key_t, Ttl_t[Mapped_t]]
 	ttl   time.Duration
 	limit int
 	evict Evict[Key_t, Mapped_t]
@@ -28,7 +28,7 @@ type Cache_t[Key_t comparable, Mapped_t any] struct {
 
 func New[Key_t comparable, Mapped_t any](limit int, ttl time.Duration, evict Evict[Key_t, Mapped_t]) (self *Cache_t[Key_t, Mapped_t]) {
 	self = &Cache_t[Key_t, Mapped_t]{}
-	self.c = cache.New[Key_t, mapped_t[Mapped_t]]()
+	self.c = cache.New[Key_t, Ttl_t[Mapped_t]]()
 	if ttl < 0 {
 		ttl = time.Duration(1<<63 - 1)
 	}
@@ -41,10 +41,10 @@ func New[Key_t comparable, Mapped_t any](limit int, ttl time.Duration, evict Evi
 	return
 }
 
-func (self *Cache_t[Key_t, Mapped_t]) flush(it *cache.Value_t[Key_t, mapped_t[Mapped_t]], ts time.Time, keep int) bool {
+func (self *Cache_t[Key_t, Mapped_t]) flush(it *cache.Value_t[Key_t, Ttl_t[Mapped_t]], ts time.Time, keep int) bool {
 	if self.c.Size() > keep || ts.After(it.Value.ts) {
 		self.c.Remove(it.Key)
-		self.evict(it.Key, it.Value.value)
+		self.evict(it.Key, it.Value.Value)
 		return true
 	}
 	return false
@@ -60,85 +60,74 @@ func (self *Cache_t[Key_t, Mapped_t]) FlushLimit(ts time.Time, limit int) {
 	}
 }
 
-func (self *Cache_t[Key_t, Mapped_t]) Create(ts time.Time, key Key_t, value_new func(*Mapped_t), value_update func(*Mapped_t)) (res Mapped_t, ok bool) {
+func (self *Cache_t[Key_t, Mapped_t]) Create(ts time.Time, key Key_t, value_new func(*Mapped_t), value_update func(*Mapped_t)) (it *cache.Value_t[Key_t, Ttl_t[Mapped_t]], ok bool) {
 	self.Flush(ts)
-	it, ok := self.c.CreateBack(
+	it, ok = self.c.CreateBack(
 		key,
-		func(p *mapped_t[Mapped_t]) {
+		func(p *Ttl_t[Mapped_t]) {
 			p.ts = ts.Add(self.ttl)
-			value_new(&p.value)
+			value_new(&p.Value)
 		},
-		func(p *mapped_t[Mapped_t]) {
-			value_update(&p.value)
+		func(p *Ttl_t[Mapped_t]) {
+			value_update(&p.Value)
 		},
 	)
-	res = it.Value.value
 	return
 }
 
-func (self *Cache_t[Key_t, Mapped_t]) Push(ts time.Time, key Key_t, value_new func(*Mapped_t), value_update func(*Mapped_t)) (res Mapped_t, ok bool) {
+func (self *Cache_t[Key_t, Mapped_t]) Push(ts time.Time, key Key_t, value_new func(*Mapped_t), value_update func(*Mapped_t)) (it *cache.Value_t[Key_t, Ttl_t[Mapped_t]], ok bool) {
 	self.Flush(ts)
-	it, ok := self.c.PushBack(
+	it, ok = self.c.PushBack(
 		key,
-		func(p *mapped_t[Mapped_t]) {
+		func(p *Ttl_t[Mapped_t]) {
 			p.ts = ts.Add(self.ttl)
-			value_new(&p.value)
+			value_new(&p.Value)
 		},
-		func(p *mapped_t[Mapped_t]) {
+		func(p *Ttl_t[Mapped_t]) {
 			p.ts = ts.Add(self.ttl)
-			value_update(&p.value)
+			value_update(&p.Value)
 		},
 	)
-	res = it.Value.value
 	return
 }
 
-func (self *Cache_t[Key_t, Mapped_t]) Update(ts time.Time, key Key_t, value_update func(*Mapped_t)) (res Mapped_t, ok bool) {
+func (self *Cache_t[Key_t, Mapped_t]) Update(ts time.Time, key Key_t, value_update func(*Mapped_t)) (it *cache.Value_t[Key_t, Ttl_t[Mapped_t]], ok bool) {
 	self.Flush(ts)
-	it, ok := self.c.FindBack(key)
+	it, ok = self.c.FindBack(key)
 	if ok {
 		it.Value.ts = ts.Add(self.ttl)
-		value_update(&it.Value.value)
-		res = it.Value.value
+		value_update(&it.Value.Value)
 	}
 	return
 }
 
-func (self *Cache_t[Key_t, Mapped_t]) Replace(ts time.Time, key Key_t, value_update func(*Mapped_t)) (res Mapped_t, ok bool) {
+func (self *Cache_t[Key_t, Mapped_t]) Replace(ts time.Time, key Key_t, value_update func(*Mapped_t)) (it *cache.Value_t[Key_t, Ttl_t[Mapped_t]], ok bool) {
 	self.Flush(ts)
-	it, ok := self.c.Find(key)
+	it, ok = self.c.Find(key)
 	if ok {
-		value_update(&it.Value.value)
-		res = it.Value.value
+		value_update(&it.Value.Value)
 	}
 	return
 }
 
-func (self *Cache_t[Key_t, Mapped_t]) Get(ts time.Time, key Key_t) (res Mapped_t, ok bool) {
+func (self *Cache_t[Key_t, Mapped_t]) Get(ts time.Time, key Key_t) (it *cache.Value_t[Key_t, Ttl_t[Mapped_t]], ok bool) {
 	self.Flush(ts)
-	it, ok := self.c.FindBack(key)
+	it, ok = self.c.FindBack(key)
 	if ok {
 		it.Value.ts = ts.Add(self.ttl)
-		res = it.Value.value
 	}
 	return
 }
 
-func (self *Cache_t[Key_t, Mapped_t]) Find(ts time.Time, key Key_t) (res Mapped_t, ok bool) {
+func (self *Cache_t[Key_t, Mapped_t]) Find(ts time.Time, key Key_t) (it *cache.Value_t[Key_t, Ttl_t[Mapped_t]], ok bool) {
 	self.Flush(ts)
-	it, ok := self.c.Find(key)
-	if ok {
-		res = it.Value.value
-	}
+	it, ok = self.c.Find(key)
 	return
 }
 
-func (self *Cache_t[Key_t, Mapped_t]) Remove(ts time.Time, key Key_t) (res Mapped_t, ok bool) {
+func (self *Cache_t[Key_t, Mapped_t]) Remove(ts time.Time, key Key_t) (it *cache.Value_t[Key_t, Ttl_t[Mapped_t]], ok bool) {
 	self.Flush(ts)
-	it, ok := self.c.Remove(key)
-	if ok {
-		res = it.Value.value
-	}
+	it, ok = self.c.Remove(key)
 	return
 }
 
@@ -153,7 +142,7 @@ func (self *Cache_t[Key_t, Mapped_t]) LeastTs(ts time.Time) (time.Time, bool) {
 func (self *Cache_t[Key_t, Mapped_t]) Range(ts time.Time, f func(key Key_t, value Mapped_t) bool) {
 	self.Flush(ts)
 	for it := self.c.Front(); it != self.c.End(); it = it.Next() {
-		if f(it.Key, it.Value.value) == false {
+		if f(it.Key, it.Value.Value) == false {
 			return
 		}
 	}
@@ -162,7 +151,7 @@ func (self *Cache_t[Key_t, Mapped_t]) Range(ts time.Time, f func(key Key_t, valu
 func (self *Cache_t[Key_t, Mapped_t]) RangeTs(ts time.Time, f func(key Key_t, value Mapped_t, ts time.Time) bool) {
 	self.Flush(ts)
 	for it := self.c.Front(); it != self.c.End(); it = it.Next() {
-		if f(it.Key, it.Value.value, it.Value.ts) == false {
+		if f(it.Key, it.Value.Value, it.Value.ts) == false {
 			return
 		}
 	}
