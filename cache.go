@@ -15,8 +15,8 @@ type Evict[Key_t comparable, Mapped_t any] func(key Key_t, value Mapped_t)
 func Drop[Key_t comparable, Mapped_t any](Key_t, Mapped_t) {}
 
 type mapped_t[Mapped_t any] struct {
-	value Mapped_t
 	ts    time.Time
+	value Mapped_t
 }
 
 type Cache_t[Key_t comparable, Mapped_t any] struct {
@@ -68,10 +68,10 @@ func (self *Cache_t[Key_t, Mapped_t]) Create(ts time.Time, key Key_t, value_new 
 			p.ts = ts.Add(self.ttl)
 			value_new(&p.value)
 		},
+		func(p *mapped_t[Mapped_t]) {
+			value_update(&p.value)
+		},
 	)
-	if !ok {
-		value_update(&it.Value.value)
-	}
 	res = it.Value.value
 	return
 }
@@ -84,11 +84,11 @@ func (self *Cache_t[Key_t, Mapped_t]) Push(ts time.Time, key Key_t, value_new fu
 			p.ts = ts.Add(self.ttl)
 			value_new(&p.value)
 		},
+		func(p *mapped_t[Mapped_t]) {
+			p.ts = ts.Add(self.ttl)
+			value_update(&p.value)
+		},
 	)
-	if !ok {
-		it.Value.ts = ts.Add(self.ttl)
-		value_update(&it.Value.value)
-	}
 	res = it.Value.value
 	return
 }
