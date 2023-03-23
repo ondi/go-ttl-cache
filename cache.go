@@ -118,8 +118,8 @@ func (self *Cache_t[Key_t, Mapped_t]) Get(ts time.Time, key Key_t) (res Mapped_t
 	self.Flush(ts)
 	it, ok := self.c.FindBack(key)
 	if ok {
-		res = it.Value.value
 		it.Value.ts = ts.Add(self.ttl)
+		res = it.Value.value
 	}
 	return
 }
