@@ -7,8 +7,6 @@ package cache
 import (
 	"sync"
 	"time"
-
-	"github.com/ondi/go-cache"
 )
 
 type SyncCache_t[Key_t comparable, Mapped_t any] struct {
@@ -28,51 +26,72 @@ func (self *SyncCache_t[Key_t, Mapped_t]) Flush(ts time.Time) {
 	self.mx.Unlock()
 }
 
-func (self *SyncCache_t[Key_t, Mapped_t]) Create(ts time.Time, key Key_t, value_new func(*Mapped_t), value_update func(*Mapped_t)) (it *cache.Value_t[Key_t, Ttl_t[Mapped_t]], ok bool) {
+func (self *SyncCache_t[Key_t, Mapped_t]) Create(ts time.Time, key Key_t, value_new func(*Mapped_t), value_update func(*Mapped_t)) (res Mapped_t, ok bool) {
 	self.mx.Lock()
-	it, ok = self.cx.Create(ts, key, value_new, value_update)
+	it, ok := self.cx.Create(ts, key, value_new, value_update)
+	if ok {
+		res = it.Value.Value
+	}
 	self.mx.Unlock()
 	return
 }
 
-func (self *SyncCache_t[Key_t, Mapped_t]) Push(ts time.Time, key Key_t, value_new func(*Mapped_t), value_update func(*Mapped_t)) (it *cache.Value_t[Key_t, Ttl_t[Mapped_t]], ok bool) {
+func (self *SyncCache_t[Key_t, Mapped_t]) Push(ts time.Time, key Key_t, value_new func(*Mapped_t), value_update func(*Mapped_t)) (res Mapped_t, ok bool) {
 	self.mx.Lock()
-	it, ok = self.cx.Push(ts, key, value_new, value_update)
+	it, ok := self.cx.Push(ts, key, value_new, value_update)
+	if ok {
+		res = it.Value.Value
+	}
 	self.mx.Unlock()
 	return
 }
 
-func (self *SyncCache_t[Key_t, Mapped_t]) Update(ts time.Time, key Key_t, value func(*Mapped_t)) (it *cache.Value_t[Key_t, Ttl_t[Mapped_t]], ok bool) {
+func (self *SyncCache_t[Key_t, Mapped_t]) Update(ts time.Time, key Key_t, value func(*Mapped_t)) (res Mapped_t, ok bool) {
 	self.mx.Lock()
-	it, ok = self.cx.Update(ts, key, value)
+	it, ok := self.cx.Update(ts, key, value)
+	if ok {
+		res = it.Value.Value
+	}
 	self.mx.Unlock()
 	return
 }
 
-func (self *SyncCache_t[Key_t, Mapped_t]) Replace(ts time.Time, key Key_t, value func(*Mapped_t)) (it *cache.Value_t[Key_t, Ttl_t[Mapped_t]], ok bool) {
+func (self *SyncCache_t[Key_t, Mapped_t]) Replace(ts time.Time, key Key_t, value func(*Mapped_t)) (res Mapped_t, ok bool) {
 	self.mx.Lock()
-	it, ok = self.cx.Replace(ts, key, value)
+	it, ok := self.cx.Replace(ts, key, value)
+	if ok {
+		res = it.Value.Value
+	}
 	self.mx.Unlock()
 	return
 }
 
-func (self *SyncCache_t[Key_t, Mapped_t]) Get(ts time.Time, key Key_t) (it *cache.Value_t[Key_t, Ttl_t[Mapped_t]], ok bool) {
+func (self *SyncCache_t[Key_t, Mapped_t]) Get(ts time.Time, key Key_t) (res Mapped_t, ok bool) {
 	self.mx.Lock()
-	it, ok = self.cx.Get(ts, key)
+	it, ok := self.cx.Get(ts, key)
+	if ok {
+		res = it.Value.Value
+	}
 	self.mx.Unlock()
 	return
 }
 
-func (self *SyncCache_t[Key_t, Mapped_t]) Find(ts time.Time, key Key_t) (it *cache.Value_t[Key_t, Ttl_t[Mapped_t]], ok bool) {
+func (self *SyncCache_t[Key_t, Mapped_t]) Find(ts time.Time, key Key_t) (res Mapped_t, ok bool) {
 	self.mx.Lock()
-	it, ok = self.cx.Find(ts, key)
+	it, ok := self.cx.Find(ts, key)
+	if ok {
+		res = it.Value.Value
+	}
 	self.mx.Unlock()
 	return
 }
 
-func (self *SyncCache_t[Key_t, Mapped_t]) Remove(ts time.Time, key Key_t) (it *cache.Value_t[Key_t, Ttl_t[Mapped_t]], ok bool) {
+func (self *SyncCache_t[Key_t, Mapped_t]) Remove(ts time.Time, key Key_t) (res Mapped_t, ok bool) {
 	self.mx.Lock()
-	it, ok = self.cx.Remove(ts, key)
+	it, ok := self.cx.Remove(ts, key)
+	if ok {
+		res = it.Value.Value
+	}
 	self.mx.Unlock()
 	return
 }
