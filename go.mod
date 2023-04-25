@@ -3,7 +3,7 @@ module github.com/ondi/go-ttl-cache
 go 1.20
 
 require (
-	github.com/ondi/go-cache v0.0.0-20230425092407-339b6a02b517
+	github.com/ondi/go-cache v0.0.0-20230425151132-e34113a7989a
 	gotest.tools v2.2.0+incompatible
 )
 
