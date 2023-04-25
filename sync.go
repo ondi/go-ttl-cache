@@ -26,17 +26,17 @@ func (self *SyncCache_t[Key_t, Mapped_t]) Flush(ts time.Time) {
 	self.mx.Unlock()
 }
 
-func (self *SyncCache_t[Key_t, Mapped_t]) Create(ts time.Time, key Key_t, value_new func(*Mapped_t), value_update func(*Mapped_t)) (res Mapped_t, ok bool) {
+func (self *SyncCache_t[Key_t, Mapped_t]) Create(ts time.Time, key Key_t, value_init func(*Mapped_t), value_update func(*Mapped_t)) (res Mapped_t, ok bool) {
 	self.mx.Lock()
-	it, ok := self.cx.Create(ts, key, value_new, value_update)
+	it, ok := self.cx.Create(ts, key, value_init, value_update)
 	res = it.Value.Value
 	self.mx.Unlock()
 	return
 }
 
-func (self *SyncCache_t[Key_t, Mapped_t]) Push(ts time.Time, key Key_t, value_new func(*Mapped_t), value_update func(*Mapped_t)) (res Mapped_t, ok bool) {
+func (self *SyncCache_t[Key_t, Mapped_t]) Push(ts time.Time, key Key_t, value_init func(*Mapped_t), value_update func(*Mapped_t)) (res Mapped_t, ok bool) {
 	self.mx.Lock()
-	it, ok := self.cx.Push(ts, key, value_new, value_update)
+	it, ok := self.cx.Push(ts, key, value_init, value_update)
 	res = it.Value.Value
 	self.mx.Unlock()
 	return

@@ -60,13 +60,13 @@ func (self *Cache_t[Key_t, Mapped_t]) FlushLimit(ts time.Time, limit int) {
 	}
 }
 
-func (self *Cache_t[Key_t, Mapped_t]) Create(ts time.Time, key Key_t, value_new func(*Mapped_t), value_update func(*Mapped_t)) (it *cache.Value_t[Key_t, Ttl_t[Mapped_t]], ok bool) {
+func (self *Cache_t[Key_t, Mapped_t]) Create(ts time.Time, key Key_t, value_init func(*Mapped_t), value_update func(*Mapped_t)) (it *cache.Value_t[Key_t, Ttl_t[Mapped_t]], ok bool) {
 	self.Flush(ts)
 	it, ok = self.c.CreateBack(
 		key,
 		func(p *Ttl_t[Mapped_t]) {
 			p.ts = ts.Add(self.ttl)
-			value_new(&p.Value)
+			value_init(&p.Value)
 		},
 		func(p *Ttl_t[Mapped_t]) {
 			value_update(&p.Value)
@@ -75,13 +75,13 @@ func (self *Cache_t[Key_t, Mapped_t]) Create(ts time.Time, key Key_t, value_new 
 	return
 }
 
-func (self *Cache_t[Key_t, Mapped_t]) Push(ts time.Time, key Key_t, value_new func(*Mapped_t), value_update func(*Mapped_t)) (it *cache.Value_t[Key_t, Ttl_t[Mapped_t]], ok bool) {
+func (self *Cache_t[Key_t, Mapped_t]) Push(ts time.Time, key Key_t, value_init func(*Mapped_t), value_update func(*Mapped_t)) (it *cache.Value_t[Key_t, Ttl_t[Mapped_t]], ok bool) {
 	self.Flush(ts)
 	it, ok = self.c.PushBack(
 		key,
 		func(p *Ttl_t[Mapped_t]) {
 			p.ts = ts.Add(self.ttl)
-			value_new(&p.Value)
+			value_init(&p.Value)
 		},
 		func(p *Ttl_t[Mapped_t]) {
 			p.ts = ts.Add(self.ttl)
