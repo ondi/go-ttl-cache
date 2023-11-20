@@ -110,7 +110,7 @@ func (self *Cache_t[Key_t, Mapped_t]) Replace(ts time.Time, key Key_t, value_upd
 	return
 }
 
-func (self *Cache_t[Key_t, Mapped_t]) Get(ts time.Time, key Key_t) (it *cache.Value_t[Key_t, Ttl_t[Mapped_t]], ok bool) {
+func (self *Cache_t[Key_t, Mapped_t]) Refresh(ts time.Time, key Key_t) (it *cache.Value_t[Key_t, Ttl_t[Mapped_t]], ok bool) {
 	self.Flush(ts)
 	it, ok = self.c.FindBack(key)
 	if ok {

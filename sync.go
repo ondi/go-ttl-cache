@@ -62,9 +62,9 @@ func (self *SyncCache_t[Key_t, Mapped_t]) Replace(ts time.Time, key Key_t, value
 	return
 }
 
-func (self *SyncCache_t[Key_t, Mapped_t]) Get(ts time.Time, key Key_t) (res Mapped_t, ok bool) {
+func (self *SyncCache_t[Key_t, Mapped_t]) Refresh(ts time.Time, key Key_t) (res Mapped_t, ok bool) {
 	self.mx.Lock()
-	it, ok := self.cx.Get(ts, key)
+	it, ok := self.cx.Refresh(ts, key)
 	if ok {
 		res = it.Value.Value
 	}

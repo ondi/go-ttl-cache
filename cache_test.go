@@ -16,16 +16,16 @@ func Test_ttl_cache1(t *testing.T) {
 	c := NewSync(2, time.Second, Drop[int, int])
 
 	c.Create(time.Now(), 1, func(p *int) { *p = 1 }, func(p *int) {})
-	c.Get(time.Now(), 1)
+	c.Refresh(time.Now(), 1)
 	c.Create(time.Now(), 2, func(p *int) { *p = 2 }, func(p *int) {})
-	c.Get(time.Now(), 1)
+	c.Refresh(time.Now(), 1)
 	c.Create(time.Now(), 3, func(p *int) { *p = 3 }, func(p *int) {})
 	c.Update(time.Now(), 4, func(p *int) { *p = 4 })
-	_, ok := c.Get(time.Now(), 1)
+	_, ok := c.Refresh(time.Now(), 1)
 	assert.Assert(t, ok == true)
-	_, ok = c.Get(time.Now(), 2)
+	_, ok = c.Refresh(time.Now(), 2)
 	assert.Assert(t, ok == false)
-	_, ok = c.Get(time.Now(), 3)
+	_, ok = c.Refresh(time.Now(), 3)
 	assert.Assert(t, ok == true)
 }
 
@@ -33,16 +33,16 @@ func Test_ttl_cache2(t *testing.T) {
 	c := NewSync(2, time.Second, Drop[int, int])
 
 	c.Push(time.Now(), 1, func(p *int) { *p = 10 }, func(p *int) {})
-	c.Get(time.Now(), 1)
+	c.Refresh(time.Now(), 1)
 	c.Push(time.Now(), 2, func(p *int) { *p = 20 }, func(p *int) {})
-	c.Get(time.Now(), 1)
+	c.Refresh(time.Now(), 1)
 	c.Push(time.Now(), 3, func(p *int) { *p = 30 }, func(p *int) {})
 	c.Update(time.Now(), 4, func(p *int) { *p = 40 })
-	_, ok := c.Get(time.Now(), 1)
+	_, ok := c.Refresh(time.Now(), 1)
 	assert.Assert(t, ok == true)
-	_, ok = c.Get(time.Now(), 2)
+	_, ok = c.Refresh(time.Now(), 2)
 	assert.Assert(t, ok == false)
-	_, ok = c.Get(time.Now(), 3)
+	_, ok = c.Refresh(time.Now(), 3)
 	assert.Assert(t, ok == true)
 }
 
