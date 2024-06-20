@@ -10,9 +10,9 @@ import (
 	"github.com/ondi/go-cache"
 )
 
-type Evict[Key_t comparable, Mapped_t any] func(ts time.Time, key Key_t, value Mapped_t)
+type Evict[Key_t comparable, Mapped_t any] func(ts time.Time, overflow bool, key Key_t, value Mapped_t)
 
-func Drop[Key_t comparable, Mapped_t any](time.Time, Key_t, Mapped_t) {}
+func Drop[Key_t comparable, Mapped_t any](time.Time, bool, Key_t, Mapped_t) {}
 
 type Ttl_t[Mapped_t any] struct {
 	ts    time.Time
@@ -41,22 +41,28 @@ func New[Key_t comparable, Mapped_t any](limit int, ttl time.Duration, evict Evi
 	return
 }
 
-func (self *Cache_t[Key_t, Mapped_t]) flush(it *cache.Value_t[Key_t, Ttl_t[Mapped_t]], ts time.Time, keep int) bool {
-	if self.c.Size() > keep || ts.After(it.Value.ts) {
+func (self *Cache_t[Key_t, Mapped_t]) flush(ts time.Time, keep int, it *cache.Value_t[Key_t, Ttl_t[Mapped_t]]) (ok bool) {
+	if ok = self.c.Size() > keep; ok || ts.After(it.Value.ts) {
 		self.c.Remove(it.Key)
-		self.evict(ts, it.Key, it.Value.Value)
+		self.evict(ts, ok, it.Key, it.Value.Value)
 		return true
 	}
 	return false
 }
 
 func (self *Cache_t[Key_t, Mapped_t]) Flush(ts time.Time) {
-	for it := self.c.Front(); it != self.c.End() && self.flush(it, ts, self.limit); it = it.Next() {
+	for it := self.c.Front(); it != self.c.End(); it = it.Next() {
+		if self.flush(ts, self.limit, it) == false {
+			break
+		}
 	}
 }
 
 func (self *Cache_t[Key_t, Mapped_t]) FlushLimit(ts time.Time, limit int) {
-	for it := self.c.Front(); it != self.c.End() && self.flush(it, ts, limit); it = it.Next() {
+	for it := self.c.Front(); it != self.c.End(); it = it.Next() {
+		if self.flush(ts, limit, it) == false {
+			break
+		}
 	}
 }
 
