@@ -34,9 +34,25 @@ func (self *SyncCache_t[Key_t, Mapped_t]) Create(ts time.Time, key Key_t, value_
 	return
 }
 
+func (self *SyncCache_t[Key_t, Mapped_t]) CreateTtl(ts time.Time, ttl time.Duration, key Key_t, value_init func(*Mapped_t), value_update func(*Mapped_t)) (res Mapped_t, ok bool) {
+	self.mx.Lock()
+	it, ok := self.cx.CreateTtl(ts, ttl, key, value_init, value_update)
+	res = it.Value.Value
+	self.mx.Unlock()
+	return
+}
+
 func (self *SyncCache_t[Key_t, Mapped_t]) Push(ts time.Time, key Key_t, value_init func(*Mapped_t), value_update func(*Mapped_t)) (res Mapped_t, ok bool) {
 	self.mx.Lock()
 	it, ok := self.cx.Push(ts, key, value_init, value_update)
+	res = it.Value.Value
+	self.mx.Unlock()
+	return
+}
+
+func (self *SyncCache_t[Key_t, Mapped_t]) PushTtl(ts time.Time, ttl time.Duration, key Key_t, value_init func(*Mapped_t), value_update func(*Mapped_t)) (res Mapped_t, ok bool) {
+	self.mx.Lock()
+	it, ok := self.cx.PushTtl(ts, ttl, key, value_init, value_update)
 	res = it.Value.Value
 	self.mx.Unlock()
 	return
@@ -52,9 +68,9 @@ func (self *SyncCache_t[Key_t, Mapped_t]) Update(ts time.Time, key Key_t, value 
 	return
 }
 
-func (self *SyncCache_t[Key_t, Mapped_t]) Replace(ts time.Time, key Key_t, value func(*Mapped_t)) (res Mapped_t, ok bool) {
+func (self *SyncCache_t[Key_t, Mapped_t]) UpdateTtl(ts time.Time, ttl time.Duration, key Key_t, value func(*Mapped_t)) (res Mapped_t, ok bool) {
 	self.mx.Lock()
-	it, ok := self.cx.Replace(ts, key, value)
+	it, ok := self.cx.UpdateTtl(ts, ttl, key, value)
 	if ok {
 		res = it.Value.Value
 	}
@@ -65,6 +81,26 @@ func (self *SyncCache_t[Key_t, Mapped_t]) Replace(ts time.Time, key Key_t, value
 func (self *SyncCache_t[Key_t, Mapped_t]) Refresh(ts time.Time, key Key_t) (res Mapped_t, ok bool) {
 	self.mx.Lock()
 	it, ok := self.cx.Refresh(ts, key)
+	if ok {
+		res = it.Value.Value
+	}
+	self.mx.Unlock()
+	return
+}
+
+func (self *SyncCache_t[Key_t, Mapped_t]) RefreshTtl(ts time.Time, ttl time.Duration, key Key_t) (res Mapped_t, ok bool) {
+	self.mx.Lock()
+	it, ok := self.cx.RefreshTtl(ts, ttl, key)
+	if ok {
+		res = it.Value.Value
+	}
+	self.mx.Unlock()
+	return
+}
+
+func (self *SyncCache_t[Key_t, Mapped_t]) Replace(ts time.Time, key Key_t, value func(*Mapped_t)) (res Mapped_t, ok bool) {
+	self.mx.Lock()
+	it, ok := self.cx.Replace(ts, key, value)
 	if ok {
 		res = it.Value.Value
 	}
