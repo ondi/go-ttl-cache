@@ -10,9 +10,9 @@ import (
 	"github.com/ondi/go-cache"
 )
 
-type Evict[Key_t comparable, Mapped_t any] func(key Key_t, value Mapped_t)
+type Evict[Key_t comparable, Mapped_t any] func(ts time.Time, key Key_t, value Mapped_t)
 
-func Drop[Key_t comparable, Mapped_t any](Key_t, Mapped_t) {}
+func Drop[Key_t comparable, Mapped_t any](time.Time, Key_t, Mapped_t) {}
 
 type Ttl_t[Mapped_t any] struct {
 	ts    time.Time
@@ -44,7 +44,7 @@ func New[Key_t comparable, Mapped_t any](limit int, ttl time.Duration, evict Evi
 func (self *Cache_t[Key_t, Mapped_t]) flush(it *cache.Value_t[Key_t, Ttl_t[Mapped_t]], ts time.Time, keep int) bool {
 	if self.c.Size() > keep || ts.After(it.Value.ts) {
 		self.c.Remove(it.Key)
-		self.evict(it.Key, it.Value.Value)
+		self.evict(ts, it.Key, it.Value.Value)
 		return true
 	}
 	return false
