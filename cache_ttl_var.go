@@ -66,7 +66,7 @@ func (self *CacheVar_t[Key_t, Mapped_t]) Create(ts time.Time, ttl time.Duration,
 	)
 	if ok {
 		self.cx.InsertionSortBack(func(a, b *cache.Value_t[Key_t, Ttl_t[Mapped_t]]) bool {
-			return a.Value.ts.Before(b.Value.ts)
+			return a.Value.ts.After(b.Value.ts)
 		})
 	}
 	return
@@ -86,7 +86,7 @@ func (self *CacheVar_t[Key_t, Mapped_t]) Push(ts time.Time, ttl time.Duration, k
 		},
 	)
 	self.cx.InsertionSortBack(func(a, b *cache.Value_t[Key_t, Ttl_t[Mapped_t]]) bool {
-		return a.Value.ts.Before(b.Value.ts)
+		return a.Value.ts.After(b.Value.ts)
 	})
 	return
 }
@@ -98,7 +98,7 @@ func (self *CacheVar_t[Key_t, Mapped_t]) Update(ts time.Time, ttl time.Duration,
 		it.Value.ts = ts.Add(ttl)
 		value_update(&it.Value.Value)
 		self.cx.InsertionSortBack(func(a, b *cache.Value_t[Key_t, Ttl_t[Mapped_t]]) bool {
-			return a.Value.ts.Before(b.Value.ts)
+			return a.Value.ts.After(b.Value.ts)
 		})
 	}
 	return
@@ -110,7 +110,7 @@ func (self *CacheVar_t[Key_t, Mapped_t]) Refresh(ts time.Time, ttl time.Duration
 	if ok {
 		it.Value.ts = ts.Add(ttl)
 		self.cx.InsertionSortBack(func(a, b *cache.Value_t[Key_t, Ttl_t[Mapped_t]]) bool {
-			return a.Value.ts.Before(b.Value.ts)
+			return a.Value.ts.After(b.Value.ts)
 		})
 	}
 	return

@@ -79,7 +79,7 @@ func Example_ttl_cache3() {
 }
 
 func Example_ttl_cache4() {
-	c := NewSyncVar(10, Drop[int, int])
+	c := NewVar(10, Drop[int, int])
 
 	ts := time.Now()
 	c.Create(ts, 1*time.Second, 1, func(p *int) { *p = 10 }, func(p *int) {})
@@ -109,7 +109,35 @@ func Example_ttl_cache4() {
 }
 
 func Example_ttl_cache5() {
-	c := NewSyncVar(10, Drop[int, int])
+	c := NewVar(10, Drop[int, int])
+
+	ts := time.Now()
+	c.Create(ts, 6*time.Second, 1, func(p *int) { *p = 10 }, func(p *int) {})
+	c.Push(ts, 5*time.Second, 2, func(p *int) { *p = 20 }, func(p *int) {})
+	c.Create(ts, 4*time.Second, 3, func(p *int) { *p = 30 }, func(p *int) {})
+	c.Push(ts, 3*time.Second, 4, func(p *int) { *p = 40 }, func(p *int) {})
+	c.Create(ts, 2*time.Second, 5, func(p *int) { *p = 50 }, func(p *int) {})
+	c.Push(ts, 1*time.Second, 6, func(p *int) { *p = 60 }, func(p *int) {})
+
+	c.Range(
+		ts,
+		func(key int, value int) bool {
+			fmt.Printf("%v %v\n", key, value)
+			return true
+		},
+	)
+	// Output:
+	// 6 60
+	// 5 50
+	// 4 40
+	// 3 30
+	// 2 20
+	// 1 10
+
+}
+
+func Example_ttl_cache6() {
+	c := NewVar(10, Drop[int, int])
 
 	ts := time.Now()
 	c.Create(ts, 1*time.Second, 1, func(p *int) { *p = 10 }, func(p *int) {})
@@ -127,10 +155,10 @@ func Example_ttl_cache5() {
 		},
 	)
 	// Output:
-	// 6 60
-	// 5 50
-	// 4 40
-	// 3 30
-	// 2 20
 	// 1 10
+	// 2 20
+	// 3 30
+	// 4 40
+	// 5 50
+	// 6 60
 }
