@@ -10,15 +10,6 @@ import (
 	"github.com/ondi/go-cache"
 )
 
-type Evict[Key_t comparable, Mapped_t any] func(key Key_t, value Mapped_t)
-
-func Drop[Key_t comparable, Mapped_t any](Key_t, Mapped_t) {}
-
-type Ttl_t[Mapped_t any] struct {
-	ts    time.Time
-	Value Mapped_t
-}
-
 type Cache_t[Key_t comparable, Mapped_t any] struct {
 	cx    *cache.Cache_t[Key_t, Ttl_t[Mapped_t]]
 	ttl   time.Duration
@@ -81,26 +72,6 @@ func (self *Cache_t[Key_t, Mapped_t]) Create(ts time.Time, key Key_t, value_init
 	return
 }
 
-func (self *Cache_t[Key_t, Mapped_t]) CreateTtl(ts time.Time, ttl time.Duration, key Key_t, value_init func(*Mapped_t), value_update func(*Mapped_t)) (it *cache.Value_t[Key_t, Ttl_t[Mapped_t]], ok bool) {
-	self.Flush(ts)
-	it, ok = self.cx.CreateBack(
-		key,
-		func(p *Ttl_t[Mapped_t]) {
-			p.ts = ts.Add(ttl)
-			value_init(&p.Value)
-		},
-		func(p *Ttl_t[Mapped_t]) {
-			value_update(&p.Value)
-		},
-	)
-	if ok {
-		self.cx.InsertionSortBack(func(a, b *cache.Value_t[Key_t, Ttl_t[Mapped_t]]) bool {
-			return a.Value.ts.Before(b.Value.ts)
-		})
-	}
-	return
-}
-
 func (self *Cache_t[Key_t, Mapped_t]) Push(ts time.Time, key Key_t, value_init func(*Mapped_t), value_update func(*Mapped_t)) (it *cache.Value_t[Key_t, Ttl_t[Mapped_t]], ok bool) {
 	self.Flush(ts)
 	it, ok = self.cx.PushBack(
@@ -117,25 +88,6 @@ func (self *Cache_t[Key_t, Mapped_t]) Push(ts time.Time, key Key_t, value_init f
 	return
 }
 
-func (self *Cache_t[Key_t, Mapped_t]) PushTtl(ts time.Time, ttl time.Duration, key Key_t, value_init func(*Mapped_t), value_update func(*Mapped_t)) (it *cache.Value_t[Key_t, Ttl_t[Mapped_t]], ok bool) {
-	self.Flush(ts)
-	it, ok = self.cx.PushBack(
-		key,
-		func(p *Ttl_t[Mapped_t]) {
-			p.ts = ts.Add(ttl)
-			value_init(&p.Value)
-		},
-		func(p *Ttl_t[Mapped_t]) {
-			p.ts = ts.Add(ttl)
-			value_update(&p.Value)
-		},
-	)
-	self.cx.InsertionSortBack(func(a, b *cache.Value_t[Key_t, Ttl_t[Mapped_t]]) bool {
-		return a.Value.ts.Before(b.Value.ts)
-	})
-	return
-}
-
 func (self *Cache_t[Key_t, Mapped_t]) Update(ts time.Time, key Key_t, value_update func(*Mapped_t)) (it *cache.Value_t[Key_t, Ttl_t[Mapped_t]], ok bool) {
 	self.Flush(ts)
 	it, ok = self.cx.FindBack(key)
@@ -146,36 +98,11 @@ func (self *Cache_t[Key_t, Mapped_t]) Update(ts time.Time, key Key_t, value_upda
 	return
 }
 
-func (self *Cache_t[Key_t, Mapped_t]) UpdateTtl(ts time.Time, ttl time.Duration, key Key_t, value_update func(*Mapped_t)) (it *cache.Value_t[Key_t, Ttl_t[Mapped_t]], ok bool) {
-	self.Flush(ts)
-	it, ok = self.cx.FindBack(key)
-	if ok {
-		it.Value.ts = ts.Add(ttl)
-		value_update(&it.Value.Value)
-		self.cx.InsertionSortBack(func(a, b *cache.Value_t[Key_t, Ttl_t[Mapped_t]]) bool {
-			return a.Value.ts.Before(b.Value.ts)
-		})
-	}
-	return
-}
-
 func (self *Cache_t[Key_t, Mapped_t]) Refresh(ts time.Time, key Key_t) (it *cache.Value_t[Key_t, Ttl_t[Mapped_t]], ok bool) {
 	self.Flush(ts)
 	it, ok = self.cx.FindBack(key)
 	if ok {
 		it.Value.ts = ts.Add(self.ttl)
-	}
-	return
-}
-
-func (self *Cache_t[Key_t, Mapped_t]) RefreshTtl(ts time.Time, ttl time.Duration, key Key_t) (it *cache.Value_t[Key_t, Ttl_t[Mapped_t]], ok bool) {
-	self.Flush(ts)
-	it, ok = self.cx.FindBack(key)
-	if ok {
-		it.Value.ts = ts.Add(ttl)
-		self.cx.InsertionSortBack(func(a, b *cache.Value_t[Key_t, Ttl_t[Mapped_t]]) bool {
-			return a.Value.ts.Before(b.Value.ts)
-		})
 	}
 	return
 }
