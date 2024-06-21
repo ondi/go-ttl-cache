@@ -52,6 +52,18 @@ func (self *CacheVar_t[Key_t, Mapped_t]) FlushLimit(ts time.Time, limit int) {
 	}
 }
 
+func (self *CacheVar_t[Key_t, Mapped_t]) find_place() {
+	it1 := self.cx.Back()
+	it2 := self.cx.End()
+	for it3 := self.cx.Back().Prev(); it3 != self.cx.End() && it1.Value.ts.Before(it3.Value.ts); it3 = it3.Prev() {
+		it2 = it3
+	}
+	if it2 != self.cx.End() {
+		cache.CutList(it1)
+		cache.SetPrev(it1, it2)
+	}
+}
+
 func (self *CacheVar_t[Key_t, Mapped_t]) Create(ts time.Time, ttl time.Duration, key Key_t, value_init func(*Mapped_t), value_update func(*Mapped_t)) (it *cache.Value_t[Key_t, Ttl_t[Mapped_t]], ok bool) {
 	self.Flush(ts)
 	it, ok = self.cx.CreateBack(
@@ -65,9 +77,7 @@ func (self *CacheVar_t[Key_t, Mapped_t]) Create(ts time.Time, ttl time.Duration,
 		},
 	)
 	if ok {
-		self.cx.InsertionSortBack(func(a, b *cache.Value_t[Key_t, Ttl_t[Mapped_t]]) bool {
-			return a.Value.ts.After(b.Value.ts)
-		})
+		self.find_place()
 	}
 	return
 }
@@ -85,9 +95,7 @@ func (self *CacheVar_t[Key_t, Mapped_t]) Push(ts time.Time, ttl time.Duration, k
 			value_update(&p.Value)
 		},
 	)
-	self.cx.InsertionSortBack(func(a, b *cache.Value_t[Key_t, Ttl_t[Mapped_t]]) bool {
-		return a.Value.ts.After(b.Value.ts)
-	})
+	self.find_place()
 	return
 }
 
@@ -97,9 +105,7 @@ func (self *CacheVar_t[Key_t, Mapped_t]) Update(ts time.Time, ttl time.Duration,
 	if ok {
 		it.Value.ts = ts.Add(ttl)
 		value_update(&it.Value.Value)
-		self.cx.InsertionSortBack(func(a, b *cache.Value_t[Key_t, Ttl_t[Mapped_t]]) bool {
-			return a.Value.ts.After(b.Value.ts)
-		})
+		self.find_place()
 	}
 	return
 }
@@ -109,9 +115,7 @@ func (self *CacheVar_t[Key_t, Mapped_t]) Refresh(ts time.Time, ttl time.Duration
 	it, ok = self.cx.FindBack(key)
 	if ok {
 		it.Value.ts = ts.Add(ttl)
-		self.cx.InsertionSortBack(func(a, b *cache.Value_t[Key_t, Ttl_t[Mapped_t]]) bool {
-			return a.Value.ts.After(b.Value.ts)
-		})
+		self.find_place()
 	}
 	return
 }
