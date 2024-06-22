@@ -1,6 +1,6 @@
 module github.com/ondi/go-ttl-cache
 
-go 1.20
+go 1.21
 
 require (
 	github.com/ondi/go-cache v0.0.0-20230425151132-e34113a7989a

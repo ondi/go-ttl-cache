@@ -10,15 +10,20 @@ import (
 	"github.com/ondi/go-cache"
 )
 
+type VarValue_t[Mapped_t any] struct {
+	ts    time.Time
+	Value Mapped_t
+}
+
 type CacheVar_t[Key_t comparable, Mapped_t any] struct {
-	cx    *cache.Cache_t[Key_t, TsValue_t[Mapped_t]]
+	cx    *cache.Cache_t[Key_t, VarValue_t[Mapped_t]]
 	limit int
 	evict Evict[Key_t, Mapped_t]
 }
 
 func NewVar[Key_t comparable, Mapped_t any](limit int, evict Evict[Key_t, Mapped_t]) (self *CacheVar_t[Key_t, Mapped_t]) {
 	self = &CacheVar_t[Key_t, Mapped_t]{}
-	self.cx = cache.New[Key_t, TsValue_t[Mapped_t]]()
+	self.cx = cache.New[Key_t, VarValue_t[Mapped_t]]()
 	if limit < 0 {
 		limit = 1<<63 - 1
 	}
@@ -27,7 +32,7 @@ func NewVar[Key_t comparable, Mapped_t any](limit int, evict Evict[Key_t, Mapped
 	return
 }
 
-func (self *CacheVar_t[Key_t, Mapped_t]) flush(ts time.Time, keep int, it *cache.Value_t[Key_t, TsValue_t[Mapped_t]]) bool {
+func (self *CacheVar_t[Key_t, Mapped_t]) flush(ts time.Time, keep int, it *cache.Value_t[Key_t, VarValue_t[Mapped_t]]) bool {
 	if self.cx.Size() > keep || ts.Before(it.Value.ts) == false {
 		self.cx.Remove(it.Key)
 		self.evict(it.Key, it.Value.Value)
@@ -64,15 +69,15 @@ func (self *CacheVar_t[Key_t, Mapped_t]) find_place() {
 	}
 }
 
-func (self *CacheVar_t[Key_t, Mapped_t]) Create(ts time.Time, ttl time.Duration, key Key_t, value_init func(*Mapped_t), value_update func(*Mapped_t)) (it *cache.Value_t[Key_t, TsValue_t[Mapped_t]], ok bool) {
+func (self *CacheVar_t[Key_t, Mapped_t]) Create(ts time.Time, ttl time.Duration, key Key_t, value_init func(*Mapped_t), value_update func(*Mapped_t)) (it *cache.Value_t[Key_t, VarValue_t[Mapped_t]], ok bool) {
 	self.Flush(ts)
 	it, ok = self.cx.CreateBack(
 		key,
-		func(p *TsValue_t[Mapped_t]) {
+		func(p *VarValue_t[Mapped_t]) {
 			p.ts = ts.Add(ttl)
 			value_init(&p.Value)
 		},
-		func(p *TsValue_t[Mapped_t]) {
+		func(p *VarValue_t[Mapped_t]) {
 			value_update(&p.Value)
 		},
 	)
@@ -82,15 +87,15 @@ func (self *CacheVar_t[Key_t, Mapped_t]) Create(ts time.Time, ttl time.Duration,
 	return
 }
 
-func (self *CacheVar_t[Key_t, Mapped_t]) Push(ts time.Time, ttl time.Duration, key Key_t, value_init func(*Mapped_t), value_update func(*Mapped_t)) (it *cache.Value_t[Key_t, TsValue_t[Mapped_t]], ok bool) {
+func (self *CacheVar_t[Key_t, Mapped_t]) Push(ts time.Time, ttl time.Duration, key Key_t, value_init func(*Mapped_t), value_update func(*Mapped_t)) (it *cache.Value_t[Key_t, VarValue_t[Mapped_t]], ok bool) {
 	self.Flush(ts)
 	it, ok = self.cx.PushBack(
 		key,
-		func(p *TsValue_t[Mapped_t]) {
+		func(p *VarValue_t[Mapped_t]) {
 			p.ts = ts.Add(ttl)
 			value_init(&p.Value)
 		},
-		func(p *TsValue_t[Mapped_t]) {
+		func(p *VarValue_t[Mapped_t]) {
 			p.ts = ts.Add(ttl)
 			value_update(&p.Value)
 		},
@@ -99,7 +104,7 @@ func (self *CacheVar_t[Key_t, Mapped_t]) Push(ts time.Time, ttl time.Duration, k
 	return
 }
 
-func (self *CacheVar_t[Key_t, Mapped_t]) Update(ts time.Time, ttl time.Duration, key Key_t, value_update func(*Mapped_t)) (it *cache.Value_t[Key_t, TsValue_t[Mapped_t]], ok bool) {
+func (self *CacheVar_t[Key_t, Mapped_t]) Update(ts time.Time, ttl time.Duration, key Key_t, value_update func(*Mapped_t)) (it *cache.Value_t[Key_t, VarValue_t[Mapped_t]], ok bool) {
 	self.Flush(ts)
 	it, ok = self.cx.FindBack(key)
 	if ok {
@@ -110,7 +115,7 @@ func (self *CacheVar_t[Key_t, Mapped_t]) Update(ts time.Time, ttl time.Duration,
 	return
 }
 
-func (self *CacheVar_t[Key_t, Mapped_t]) Refresh(ts time.Time, ttl time.Duration, key Key_t) (it *cache.Value_t[Key_t, TsValue_t[Mapped_t]], ok bool) {
+func (self *CacheVar_t[Key_t, Mapped_t]) Refresh(ts time.Time, ttl time.Duration, key Key_t) (it *cache.Value_t[Key_t, VarValue_t[Mapped_t]], ok bool) {
 	self.Flush(ts)
 	it, ok = self.cx.FindBack(key)
 	if ok {
@@ -120,7 +125,7 @@ func (self *CacheVar_t[Key_t, Mapped_t]) Refresh(ts time.Time, ttl time.Duration
 	return
 }
 
-func (self *CacheVar_t[Key_t, Mapped_t]) Replace(ts time.Time, key Key_t, value_update func(*Mapped_t)) (it *cache.Value_t[Key_t, TsValue_t[Mapped_t]], ok bool) {
+func (self *CacheVar_t[Key_t, Mapped_t]) Replace(ts time.Time, key Key_t, value_update func(*Mapped_t)) (it *cache.Value_t[Key_t, VarValue_t[Mapped_t]], ok bool) {
 	self.Flush(ts)
 	it, ok = self.cx.Find(key)
 	if ok {
@@ -129,13 +134,13 @@ func (self *CacheVar_t[Key_t, Mapped_t]) Replace(ts time.Time, key Key_t, value_
 	return
 }
 
-func (self *CacheVar_t[Key_t, Mapped_t]) Find(ts time.Time, key Key_t) (it *cache.Value_t[Key_t, TsValue_t[Mapped_t]], ok bool) {
+func (self *CacheVar_t[Key_t, Mapped_t]) Find(ts time.Time, key Key_t) (it *cache.Value_t[Key_t, VarValue_t[Mapped_t]], ok bool) {
 	self.Flush(ts)
 	it, ok = self.cx.Find(key)
 	return
 }
 
-func (self *CacheVar_t[Key_t, Mapped_t]) Remove(ts time.Time, key Key_t) (it *cache.Value_t[Key_t, TsValue_t[Mapped_t]], ok bool) {
+func (self *CacheVar_t[Key_t, Mapped_t]) Remove(ts time.Time, key Key_t) (it *cache.Value_t[Key_t, VarValue_t[Mapped_t]], ok bool) {
 	self.Flush(ts)
 	it, ok = self.cx.Remove(key)
 	return
