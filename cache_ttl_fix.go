@@ -5,6 +5,7 @@
 package cache
 
 import (
+	"math"
 	"time"
 
 	"github.com/ondi/go-cache"
@@ -26,10 +27,10 @@ func New[Key_t comparable, Mapped_t any](limit int, ttl time.Duration, evict Evi
 	self = &Cache_t[Key_t, Mapped_t]{}
 	self.cx = cache.New[Key_t, FixValue_t[Mapped_t]]()
 	if ttl < 0 {
-		ttl = time.Duration(1<<63 - 1)
+		ttl = time.Duration(math.MaxInt64)
 	}
 	if limit < 0 {
-		limit = 1<<63 - 1
+		limit = math.MaxInt
 	}
 	self.ttl = ttl
 	self.limit = limit

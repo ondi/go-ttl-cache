@@ -5,6 +5,7 @@
 package cache
 
 import (
+	"math"
 	"time"
 
 	"github.com/ondi/go-cache"
@@ -25,7 +26,7 @@ func NewVar[Key_t comparable, Mapped_t any](limit int, evict Evict[Key_t, Mapped
 	self = &CacheVar_t[Key_t, Mapped_t]{}
 	self.cx = cache.New[Key_t, VarValue_t[Mapped_t]]()
 	if limit < 0 {
-		limit = 1<<63 - 1
+		limit = math.MaxInt
 	}
 	self.limit = limit
 	self.evict = evict
